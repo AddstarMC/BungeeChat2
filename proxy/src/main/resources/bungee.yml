@@ -1,0 +1,7 @@
+name: ${project.name}
+version: ${version.build}
+author: Schmoller
+
+main: au.com.addstar.bchat.BungeeChat
+
+depends: [geSuit]
