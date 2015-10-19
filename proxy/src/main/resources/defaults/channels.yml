@@ -1,0 +1,109 @@
+# Here you can change the format of the default channel.
+# format can have tags that get replaced when used.
+# The provided tags are:
+#  {DISPLAYNAME}: The coloured display name of the sender
+#  {RAWDISPLAYNAME}: The uncoloured display name of the sender
+#  {NAME}: The coloured user name of the sender
+#  {RAWNAME}: The uncoloured user name of the sender
+#  {MESSAGE}: The message being sent
+#  {SERVER}: The name of the senders server
+#  {WORLD}: The name of the senders world
+#  {GROUP}: The name of the senders group (defined in groups.yml)
+#  {PREFIX}: The prefix for the senders group (defined in groups.yml)
+#  {SUFFIX}: The suffix for the senders group (defined in groups.yml)
+default:
+  format: '{PREFIX}<{DISPLAYNAME}&f>{SUFFIX}: {MESSAGE}'
+
+# Here you defined the direct messaging formats
+# These formats are as above but with the addition of the following tags:
+#  {TDISPLAYNAME}: The coloured display name of the target
+#  {TRAWDISPLAYNAME}: The uncoloured display name of the target
+#  {TNAME}: The coloured user name of the target
+#  {TRAWNAME}: The uncoloured user name of the target
+#  {TSERVER}: The name of the senders target
+#  {TWORLD}: The name of the targets world
+#  {TGROUP}: The name of the targets group (defined in groups.yml)
+#  {TPREFIX}: The prefix for the targets group (defined in groups.yml)
+#  {TSUFFIX}: The suffix for the targets group (defined in groups.yml)
+dm:
+  format-in: '[{DISPLAYNAME}&f -> Me]: {MESSAGE}'
+  format-out: '[Me -> {DISPLAYNAME}&f]: {MESSAGE}'
+
+# Here you define channels. Each channel should be given a name and a listenPermission
+# <name>:
+#   listenPermission: '<permission>' # optional
+# 
+# If listenPermission is omitted, then anyone will be able to listen to this channel
+#
+# channels can also be given a command(s) and permission for that command so players can
+# talk in them.
+# <name>:
+#   scope: <scope> # optional
+#   listenPermission: '<permission>' # optional
+#   format: '<format>' # required
+#   command: '<command>' OR command: ['<command>','<alias>',...] # required
+#   commandPermission: '<permission>' # optional
+#   highlight: <true|false> # optional
+#
+# scope is an optional value which defines the range of this channel. Values are:
+# - GLOBAL - default, channel broadcasts everywhere on the network
+# - SERVER - channel broadcasts everywhere on the server
+# - WORLD - channel broadcasts only in the originating world
+# 
+# format is the format string for creating the output for display. More info above
+# command is either the name of the command, or a list of commands that will be used to 
+#   talk in this channel. Commands should not add the leading slash. 
+#   ie. 'cmd' becomes /cmd, and '/cmd' becomes //cmd
+# commandPermission is the permission to execute the command. If omitted, the permission 
+#   will be the same as the listenPermission. if listenPermission is also omitted, then
+#   everyone will be able to run the command
+# highlight is whether to do keyword highlighting in this channel. It is false by default
+channels:
+  StaffNotice:
+    listenPermission: 'addstar.group.submod'
+  BCast:
+    format: '&6[&4Broadcast&6] &a{MESSAGE}'
+    commandPermission: 'bungeechat.broadcast'
+    command: [bcast,broadcast]
+
+
+# Here you define channel templates used for creating temporary channels
+# <name>:
+#   listenPermission: '<permission>' # optional
+#   format: '<format>' # required
+#   createPermission: '<permission>' # optional
+#   joinPermission: '<permission>  # optional
+#   highlight: <true|false> # optional
+#
+# listenPermission is the same as normal channel definitions.
+# format is the same as normal channel definitions with the addition of the {CHANNEL} tag
+#   which is replaced by the name of the channel
+# createPermission is the permission to create the channel. When omitted, anyone can
+#   create a channel.
+# joinPermission is the permission to join the channel. When omitted, anyone can
+#   join a channel
+# highlight is the same as normal channels
+templates:
+  RPChat:
+    listenPermission: 'addstar.group.submod'
+    format: '&7[RPChat-{CHANNEL}] {PREFIX}&7<&f{DISPLAYNAME}&7>{SUFFIX}: &f{MESSAGE}'
+    createPermission: 'addstar.chat.rp.create'
+    joinPermission: 'addstar.chat.rp.join'
+
+# Here you define what channels should be used for chat output in different locations
+# The format is:
+# <server>: <channel>
+# OR
+# <server>:
+#   GLOBAL: <channel>
+#   <world>: <channel>
+#
+# <channel> can either be a channel name, or 'default' for the normal chat
+#   or 'none' to disable chat
+#
+# GLOBAL items represent what channel should be used for anything else in this scope.
+#   When used in the server list, it is the default channel for all servers to use
+#   When used in the world list, it is the default channel for all worlds on this server to use
+defaultChannels:
+  GLOBAL: default
+  

@@ -12,12 +12,14 @@ public class ChatChannel {
 	private final String name;
 	private final Optional<String> listenPermission;
 	private final Set<GlobalPlayer> subscribers;
+	private ChannelScope scope;
 	
 	public ChatChannel(String name, Optional<String> listenPermission) {
 		this.name = name;
 		this.listenPermission = listenPermission;
 		
 		subscribers = Sets.newHashSet();
+		scope = ChannelScope.GLOBAL;
 	}
 	
 	public String getName() {
@@ -30,5 +32,13 @@ public class ChatChannel {
 	
 	public Set<GlobalPlayer> getSubscribers() {
 		return Collections.unmodifiableSet(subscribers);
+	}
+	
+	public ChannelScope getScope() {
+		return scope;
+	}
+	
+	public void setScope(ChannelScope scope) {
+		this.scope = scope;
 	}
 }

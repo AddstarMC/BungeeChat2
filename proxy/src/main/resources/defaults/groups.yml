@@ -1,0 +1,61 @@
+# Here you can define groups for players to have
+# These groups are based on permissions. Players
+# that have multiple permissions will be in the
+# group with the highest priority. If multiple
+# groups exist with the same prioirty, the chosen
+# group is unknown.
+#
+# Group format:
+# <name>:
+#   color: <color> # optional, defaults to 'f'
+#   priority: <number> # required
+#   permission: <permission> # required, exception is 'default' group
+#   prefix: <string> # optional
+#   suffix: <string> # optional
+#
+# <color> should be a minecraft colour code: 0-9,a-f,l-o,k,r
+# The prefix and suffix, when present, will be inserted in 
+# any {PREFIX} and {SUFFIX} tags respectively
+groups:
+  default:
+    color: b
+    priority: 0
+  donator:
+    color: e
+    priority: 1
+    permission: addstar.group.donator
+    prefix: '&7[&eDonator&7] '
+  friends:
+    color: a
+    priority: 2
+    permission: addstar.group.friends
+    prefix: '&7[&aFriends&7] '
+  submod:
+    color: 9
+    priority: 10
+    permission: addstar.group.submod
+    prefix: '&7[&9SubMod&7] '
+  moderator:
+    color: 9
+    priority: 11
+    permission: addstar.group.moderator
+    prefix: '&7[&9Moderator&7] '
+  subadmin:
+    color: c
+    priority: 20
+    permission: addstar.group.subadmin
+    prefix: '&7[&cSubAdmin&7] '
+  admin:
+    color: c
+    priority: 21
+    permission: addstar.group.admin
+    prefix: '&7[&cAdmin&7] '
+  owner:
+    color: c
+    priority: 23
+    permission: addstar.group.owner
+    prefix: '&7[&cAdmin&7] '
+# Allows you to set what group console will show as, as well as override its name if required
+console:
+  group: owner
+  name: add5tar

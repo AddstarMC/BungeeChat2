@@ -2,7 +2,7 @@ package au.com.addstar.bchat.channels;
 
 import com.google.common.base.Optional;
 
-public abstract class FormattedChatChannel extends ChatChannel {
+public class FormattedChatChannel extends ChatChannel {
 	private String format;
 	
 	public FormattedChatChannel(String name, Optional<String> listenPermission) {

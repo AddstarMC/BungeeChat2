@@ -5,3 +5,13 @@ author: Schmoller
 main: au.com.addstar.bchat.BungeeChat
 
 depend: [geSuitBukkit]
+
+commands:
+  runchat:
+    usage: /<command> <channel> <message>
+    description: Talks in the command chat channel as yourself. This is as if you ran /<channel> <message>. Players require the channels command permission to talk in that channel
+    permission: bungeechat.command.runchat
+  runchatas:
+    usage: /<command> <channel> <player> <message>
+    description: Talks in the command chat channel as <player>. This is as if <player> ran /<channel> <message>. You require the channels command permission to talk in that channel
+    permission: bungeechat.command.runchatas
