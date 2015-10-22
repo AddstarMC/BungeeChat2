@@ -7,8 +7,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import au.com.addstar.bchat.channels.ChannelHandler;
 import au.com.addstar.bchat.channels.ChannelManagerListener;
 import au.com.addstar.bchat.channels.ChatChannelManager;
+import au.com.addstar.bchat.channels.PacketListener;
 import au.com.addstar.bchat.packets.BasePacket;
 import au.com.addstar.bchat.packets.PacketManager;
 import net.cubespace.geSuit.core.Global;
@@ -19,7 +21,9 @@ public class BungeeChat extends JavaPlugin {
 	private ChatChannelManager channelManager;
 	private PacketManager packetManager;
 	private Channel<BasePacket> channel;
-	private ListeningExecutorService executorService; 
+	private ListeningExecutorService executorService;
+	
+	private ChannelHandler handler;
 	
 	@Override
 	public void onEnable() {
@@ -27,6 +31,8 @@ public class BungeeChat extends JavaPlugin {
 		
 		setupChannel();
 		setupChannelManager();
+		setupHandlers();
+		registerListeners();
 	}
 	
 	private void setupChannel() {
@@ -44,5 +50,14 @@ public class BungeeChat extends JavaPlugin {
 		executorService.submit(() -> {
 			channelManager.load();
 		});
+	}
+	
+	private void setupHandlers() {
+		handler = new ChannelHandler(channelManager, channel);
+		channel.addReceiver(new PacketListener(handler));
+	}
+	
+	private void registerListeners() {
+		getServer().getPluginManager().registerEvents(new ChatListener(), this);
 	}
 }

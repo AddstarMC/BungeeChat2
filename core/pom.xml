@@ -10,6 +10,13 @@
 
 	<artifactId>BungeeChat-Core</artifactId>
 	<name>BungeeChat-Core</name>
+	
+	<repositories>
+		<repository>
+			<id>md_5</id>
+			<url>https://oss.sonatype.org/content/groups/public/</url>
+		</repository>
+	</repositories>
 
 	<dependencies>
 		<dependency>
@@ -28,6 +35,12 @@
 			<groupId>net.cubespace</groupId>
 			<artifactId>geSuit-common</artifactId>
 			<version>1.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.md-5</groupId>
+			<artifactId>bungeecord-chat</artifactId>
+			<version>1.8-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
