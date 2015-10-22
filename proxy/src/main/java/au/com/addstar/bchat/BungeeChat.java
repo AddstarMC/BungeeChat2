@@ -5,6 +5,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.logging.Level;
 
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+
+import au.com.addstar.bchat.channels.ChannelManagerListener;
 import au.com.addstar.bchat.channels.ChatChannelManager;
 import au.com.addstar.bchat.packets.BasePacket;
 import au.com.addstar.bchat.packets.PacketManager;
@@ -17,6 +21,7 @@ public class BungeeChat extends Plugin {
 	private ChatChannelManager channelManager;
 	private PacketManager packetManager;
 	private Channel<BasePacket> channel;
+	private ListeningExecutorService executorService;
 	
 	@Override
 	public void onEnable() {
@@ -26,6 +31,8 @@ public class BungeeChat extends Plugin {
 			getLogger().log(Level.SEVERE, "Failed to initialize the data folder", e);
 			return;
 		}
+		
+		executorService = MoreExecutors.listeningDecorator(getExecutorService());
 		
 		setupChannel();
 		
@@ -56,6 +63,7 @@ public class BungeeChat extends Plugin {
 
 	private void loadChannels(StorageInterface backend) {
 		channelManager = new ChatChannelManager(backend, channel);
+		channel.addReceiver(new ChannelManagerListener(channelManager, executorService));
 		
 		// Populate with config loaded channels
 		File configFile = new File(getDataFolder(), "channels.yml");

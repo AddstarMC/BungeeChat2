@@ -4,18 +4,16 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import au.com.addstar.bchat.packets.BasePacket;
 import au.com.addstar.bchat.packets.ReloadPacket;
 import net.cubespace.geSuit.core.channel.Channel;
-import net.cubespace.geSuit.core.channel.ChannelDataReceiver;
 import net.cubespace.geSuit.core.storage.StorageInterface;
 import net.cubespace.geSuit.core.storage.StorageSection;
 
-public class ChatChannelManager implements ChannelDataReceiver<BasePacket> {
+public class ChatChannelManager {
 	private final StorageInterface backend;
 	private final Channel<BasePacket> channel;
 	
@@ -25,8 +23,6 @@ public class ChatChannelManager implements ChannelDataReceiver<BasePacket> {
 	public ChatChannelManager(StorageInterface backend, Channel<BasePacket> channel) {
 		this.backend = backend;
 		this.channel = channel;
-		
-		channel.addReceiver(this);
 		
 		channelMap = Collections.synchronizedMap(Maps.newHashMap());
 		templateMap = Collections.synchronizedMap(Maps.newHashMap());
@@ -202,12 +198,5 @@ public class ChatChannelManager implements ChannelDataReceiver<BasePacket> {
 	
 	public ChatChannelTemplate getTemplate(String name) {
 		return templateMap.get(name);
-	}
-	
-	@Override
-	public void onDataReceive(Channel<BasePacket> channel, BasePacket packet, int sourceId, boolean isBroadcast) {
-		if (packet instanceof ReloadPacket) {
-			load();
-		}
 	}
 }
