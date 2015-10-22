@@ -15,3 +15,7 @@ commands:
     usage: /<command> <channel> <player> <message>
     description: Talks in the command chat channel as <player>. This is as if <player> ran /<channel> <message>. You require the channels command permission to talk in that channel
     permission: bungeechat.command.runchatas
+  bungeechat:
+    usage: /<command> <options>
+    permission: bungeechat.command.bungeechat
+    aliases: [bchat]

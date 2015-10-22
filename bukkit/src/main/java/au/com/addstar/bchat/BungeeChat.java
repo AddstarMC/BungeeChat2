@@ -58,6 +58,6 @@ public class BungeeChat extends JavaPlugin {
 	}
 	
 	private void registerListeners() {
-		getServer().getPluginManager().registerEvents(new ChatListener(), this);
+		getServer().getPluginManager().registerEvents(new ChatListener(channelManager, handler), this);
 	}
 }

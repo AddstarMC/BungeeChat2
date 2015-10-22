@@ -2,7 +2,6 @@ package au.com.addstar.bchat;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -119,16 +118,15 @@ public class ChannelConfigLoader {
 				commandPermission = listenPermission;
 			}
 
-			// Load scope
+			// Load scope((CommandChatChannel) channel).setCommands();
 			ChannelScope scope = ChannelScope.valueOf(section.getString("scope", "GLOBAL"));
 
 			// Load highlighter
 			boolean useHighlighter = section.getBoolean("highlight", false);
 
 			// Create the channel
-			channel = manager.createCommandChannel(name);
+			channel = manager.createCommandChannel(name, commands);
 			((CommandChatChannel) channel).setFormat(format);
-			((CommandChatChannel) channel).setCommands(commands);
 			((CommandChatChannel) channel).setCommandPermission(commandPermission);
 			channel.setScope(scope);
 			((CommandChatChannel) channel).setUseHighlighter(useHighlighter);

@@ -10,11 +10,10 @@ public class CommandChatChannel extends FormattedChatChannel {
 	private Optional<String> commandPermission;
 	private boolean useHighlighter;
 	
-	CommandChatChannel(String name, Optional<String> listenPermission, String format, String[] commands, Optional<String> commandPermission, ChatChannelManager manager) {
-		super(name, listenPermission, format, manager);
+	CommandChatChannel(String name, String[] commands, ChatChannelManager manager) {
+		super(name, manager);
 		
 		this.commands = commands;
-		this.commandPermission = commandPermission;
 		useHighlighter = false;
 	}
 	
@@ -24,10 +23,6 @@ public class CommandChatChannel extends FormattedChatChannel {
 	
 	public String[] getCommands() {
 		return commands;
-	}
-	
-	public void setCommands(String[] commands) {
-		this.commands = commands;
 	}
 	
 	public Optional<String> getCommandPermission() {

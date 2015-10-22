@@ -20,12 +20,15 @@ public class ChatChannelManager {
 	private final Map<String, ChatChannel> channelMap;
 	private final Map<String, ChatChannelTemplate> templateMap;
 	
+	private final Map<String, CommandChatChannel> commandMap;
+	
 	public ChatChannelManager(StorageInterface backend, Channel<BasePacket> channel) {
 		this.backend = backend;
 		this.channel = channel;
 		
 		channelMap = Collections.synchronizedMap(Maps.newHashMap());
 		templateMap = Collections.synchronizedMap(Maps.newHashMap());
+		commandMap = Collections.synchronizedMap(Maps.newHashMap());
 	}
 	
 	private void loadChannels() {
@@ -66,6 +69,12 @@ public class ChatChannelManager {
 				channelSection.getStorable(channelName, channel);
 				
 				channelMap.put(channelName, channel);
+				if (channel instanceof CommandChatChannel) {
+					CommandChatChannel cChannel = (CommandChatChannel)channel;
+					for (String command : cChannel.getCommands()) {
+						commandMap.put(command.toLowerCase(), cChannel);
+					}
+				}
 			}
 		}
 	}
@@ -157,8 +166,8 @@ public class ChatChannelManager {
 		return channel;
 	}
 	
-	public CommandChatChannel createCommandChannel(String name) {
-		CommandChatChannel channel = new CommandChatChannel(name, this);
+	public CommandChatChannel createCommandChannel(String name, String...commands) {
+		CommandChatChannel channel = new CommandChatChannel(name, commands, this);
 		addChannel(channel);
 		
 		return channel;
@@ -171,15 +180,32 @@ public class ChatChannelManager {
 			}
 			
 			channelMap.put(channel.getName(), channel);
+			
+			if (channel instanceof CommandChatChannel) {
+				CommandChatChannel cChannel = (CommandChatChannel)channel;
+				for (String command : cChannel.getCommands()) {
+					commandMap.put(command.toLowerCase(), cChannel);
+				}
+			}
 		}
 	}
 	
 	public void removeChannel(String name) {
-		channelMap.remove(name);
+		ChatChannel channel = channelMap.remove(name);
+		if (channel instanceof CommandChatChannel) {
+			CommandChatChannel cChannel = (CommandChatChannel)channel;
+			for (String command : cChannel.getCommands()) {
+				commandMap.remove(command.toLowerCase(), cChannel);
+			}
+		}
 	}
 	
 	public ChatChannel getChannel(String name) {
 		return channelMap.get(name);
+	}
+	
+	public CommandChatChannel getChannelForCommand(String command) {
+		return commandMap.get(command.toLowerCase());
 	}
 	
 	public void addTemplate(ChatChannelTemplate template) {

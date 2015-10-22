@@ -17,6 +17,8 @@ public final class PacketManager {
 		
 		// Default packets
 		registerPacket(0, ReloadPacket.class);
+		registerPacket(1, BroadcastPacket.class);
+		registerPacket(2, SendPacket.class);
 	}
 	
 	public void registerPacket(int id, Class<? extends BasePacket> packetType) {
