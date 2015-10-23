@@ -37,6 +37,10 @@ public class ChatListener implements Listener {
 		String commandString = event.getMessage();
 		String[] parts = commandString.split(" ", 2);
 		
+		if (parts.length != 2) {
+			return;
+		}
+		
 		if (onCommand(event.getPlayer(), parts[0].substring(1), parts[1])) {
 			event.setMessage("/bungeechat null");
 		}
@@ -46,6 +50,10 @@ public class ChatListener implements Listener {
 	public void onServerCommand(ServerCommandEvent event) {
 		String commandString = event.getCommand();
 		String[] parts = commandString.split(" ", 2);
+		
+		if (parts.length != 2) {
+			return;
+		}
 		
 		if (onCommand(event.getSender(), parts[0], parts[1])) {
 			event.setCommand("bungeechat null");
