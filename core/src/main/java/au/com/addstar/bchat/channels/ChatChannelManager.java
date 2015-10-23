@@ -9,6 +9,7 @@ import com.google.common.collect.Maps;
 
 import au.com.addstar.bchat.packets.BasePacket;
 import au.com.addstar.bchat.packets.ReloadPacket;
+import au.com.addstar.bchat.packets.ReloadPacket.ReloadType;
 import net.cubespace.geSuit.core.channel.Channel;
 import net.cubespace.geSuit.core.storage.StorageInterface;
 import net.cubespace.geSuit.core.storage.StorageSection;
@@ -143,7 +144,7 @@ public class ChatChannelManager {
 		saveChannels();
 		
 		backend.updateAtomic();
-		channel.broadcast(new ReloadPacket());
+		channel.broadcast(new ReloadPacket(ReloadType.Channels));
 	}
 	
 	public TemporaryChatChannel createTemporaryChannel(String name, ChatChannelTemplate template) {

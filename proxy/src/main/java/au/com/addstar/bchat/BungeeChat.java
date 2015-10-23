@@ -10,6 +10,8 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import au.com.addstar.bchat.channels.ChannelManagerListener;
 import au.com.addstar.bchat.channels.ChatChannelManager;
+import au.com.addstar.bchat.groups.GroupManager;
+import au.com.addstar.bchat.groups.GroupManagerListener;
 import au.com.addstar.bchat.packets.BasePacket;
 import au.com.addstar.bchat.packets.PacketManager;
 import net.cubespace.geSuit.core.Global;
@@ -19,6 +21,7 @@ import net.md_5.bungee.api.plugin.Plugin;
 
 public class BungeeChat extends Plugin {
 	private ChatChannelManager channelManager;
+	private GroupManager groupManager;
 	private PacketManager packetManager;
 	private Channel<BasePacket> channel;
 	private ListeningExecutorService executorService;
@@ -40,6 +43,7 @@ public class BungeeChat extends Plugin {
 		StorageInterface backend = Global.getStorageProvider().create("bungeechat");
 
 		loadChannels(backend);
+		loadGroups(backend);
 	}
 
 	private void prepareDataFolder() throws IOException {
@@ -85,5 +89,25 @@ public class BungeeChat extends Plugin {
 		packetManager = new PacketManager();
 		channel = Global.getChannelManager().createChannel("bungeechat", BasePacket.class);
 		channel.setCodec(packetManager.createCodec());
+	}
+	
+	private void loadGroups(StorageInterface backend) {
+		groupManager = new GroupManager(backend, channel);
+		channel.addReceiver(new GroupManagerListener(groupManager, executorService));
+		
+		// Populate with config loaded groups
+		File configFile = new File(getDataFolder(), "groups.yml");
+		if (configFile.exists()) {
+			GroupConfigLoader loader = new GroupConfigLoader(groupManager, getLogger());
+			
+			try {
+				loader.load(configFile);
+			} catch (IOException e) {
+				getLogger().log(Level.SEVERE, "Failed to load groups.yml", e);
+			}
+			
+			// Push to the backend
+			groupManager.save();
+		}
 	}
 }

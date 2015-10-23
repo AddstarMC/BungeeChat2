@@ -8,7 +8,7 @@
 # Group format:
 # <name>:
 #   color: <color> # optional, defaults to 'f'
-#   priority: <number> # required
+#   priority: <number> # required, exception is 'default' group
 #   permission: <permission> # required, exception is 'default' group
 #   prefix: <string> # optional
 #   suffix: <string> # optional
@@ -19,7 +19,6 @@
 groups:
   default:
     color: b
-    priority: 0
   donator:
     color: e
     priority: 1
