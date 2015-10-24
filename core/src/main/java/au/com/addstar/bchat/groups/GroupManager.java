@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -61,6 +62,17 @@ public class GroupManager {
 		if (group != null) {
 			orderedGroups.remove(group);
 		}
+	}
+	
+	public Group getHighestGroup(Predicate<Group> test) {
+		Group best = null;
+		for (Group group : orderedGroups) {
+			if (test.test(group)) {
+				best = group;
+			}
+		}
+		
+		return best;
 	}
 	
 	public String getConsoleName() {
