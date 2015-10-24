@@ -23,6 +23,8 @@ public class GroupManager {
 	private final Map<String, Group> groupMap;
 	private final List<Group> orderedGroups;
 	
+	private GroupListener listener;
+	
 	private String consoleName;
 	private Group consoleGroup;
 	
@@ -32,6 +34,7 @@ public class GroupManager {
 		
 		groupMap = Collections.synchronizedMap(Maps.newHashMap());
 		orderedGroups = Collections.synchronizedList(Lists.newArrayList());
+		listener = new NullGroupListener();
 	}
 	
 	public void addGroup(Group group) throws IllegalArgumentException {
@@ -47,6 +50,7 @@ public class GroupManager {
 		}
 		
 		orderedGroups.add(index, group);
+		listener.onAddGroup(group);
 	}
 	
 	public List<Group> getGroups() {
@@ -61,6 +65,7 @@ public class GroupManager {
 		Group group = groupMap.remove(name);
 		if (group != null) {
 			orderedGroups.remove(group);
+			listener.onRemoveGroup(group);
 		}
 	}
 	
@@ -92,6 +97,10 @@ public class GroupManager {
 		consoleGroup = group;
 	}
 	
+	public void setListener(GroupListener listener) {
+		this.listener = listener;
+	}
+	
 	public void load() {
 		List<String> groups = backend.getListString("groups");
 		if (groups == null) {
@@ -103,6 +112,7 @@ public class GroupManager {
 		while (it.hasNext()) {
 			String key = it.next();
 			if (!groups.contains(key)) {
+				listener.onRemoveGroup(groupMap.get(key));
 				it.remove();
 			}
 		}
@@ -124,6 +134,7 @@ public class GroupManager {
 				}
 				
 				orderedGroups.add(index, group);
+				listener.onAddGroup(group);
 			}
 		}
 		
@@ -163,5 +174,12 @@ public class GroupManager {
 		
 		backend.updateAtomic();
 		pipe.broadcast(new ReloadPacket(ReloadType.Groups));
+	}
+	
+	private static class NullGroupListener implements GroupListener {
+		@Override
+		public void onAddGroup(Group group) {}
+		@Override
+		public void onRemoveGroup(Group group) {}
 	}
 }

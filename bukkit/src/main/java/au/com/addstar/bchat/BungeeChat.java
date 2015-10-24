@@ -13,6 +13,7 @@ import au.com.addstar.bchat.channels.ChatChannelManager;
 import au.com.addstar.bchat.channels.PacketListener;
 import au.com.addstar.bchat.groups.GroupManager;
 import au.com.addstar.bchat.groups.GroupManagerListener;
+import au.com.addstar.bchat.groups.GroupPermissionHandler;
 import au.com.addstar.bchat.packets.BasePacket;
 import au.com.addstar.bchat.packets.PacketManager;
 import net.cubespace.geSuit.core.Global;
@@ -59,6 +60,7 @@ public class BungeeChat extends JavaPlugin {
 	private void setupGroupManager(StorageInterface backend) {
 		groupManager = new GroupManager(backend, channel);
 		channel.addReceiver(new GroupManagerListener(groupManager, executorService));
+		groupManager.setListener(new GroupPermissionHandler(getServer().getPluginManager()));
 		
 		// Load it async
 		executorService.submit(() -> {
