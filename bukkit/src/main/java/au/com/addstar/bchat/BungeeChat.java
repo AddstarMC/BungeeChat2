@@ -67,12 +67,12 @@ public class BungeeChat extends JavaPlugin {
 	}
 	
 	private void setupHandlers() {
-		handler = new ChannelHandler(channelManager, channel);
+		handler = new ChannelHandler(channelManager, channel, new ChatFormatter(groupManager));
 		channel.addReceiver(new PacketListener(handler));
 	}
 	
 	private void registerListeners() {
 		getServer().getPluginManager().registerEvents(new ChatListener(channelManager, handler), this);
-		getServer().getPluginManager().registerEvents(new GroupListener(groupManager), this);
+		getServer().getPluginManager().registerEvents(new StateListener(groupManager), this);
 	}
 }

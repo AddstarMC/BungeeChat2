@@ -74,7 +74,6 @@ public class ChatListener implements Listener {
 		}
 		
 		// TODO: chat colour code formatting
-		
 		message = message.trim();
 		
 		if (ChatColor.stripColor(message).trim().isEmpty()) {
@@ -82,8 +81,7 @@ public class ChatListener implements Listener {
 			return true;
 		}
 		
-		// TODO: This is a test, this will be sendFormat 
-		handler.send(message, channel);
+		handler.sendFormat(message, channel, sender);
 		return true;
 	}
 }

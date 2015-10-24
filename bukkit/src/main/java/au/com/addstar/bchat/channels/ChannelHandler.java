@@ -5,8 +5,11 @@ import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import au.com.addstar.bchat.ChatFormatter;
 import au.com.addstar.bchat.packets.BasePacket;
 import au.com.addstar.bchat.packets.BroadcastPacket;
+import net.cubespace.geSuit.core.Global;
+import net.cubespace.geSuit.core.GlobalPlayer;
 import net.cubespace.geSuit.core.channel.Channel;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -17,10 +20,12 @@ import net.md_5.bungee.api.chat.TextComponent;
 public class ChannelHandler {
 	private final ChatChannelManager manager;
 	private final Channel<BasePacket> pipe;
+	private final ChatFormatter formatter;
 	
-	public ChannelHandler(ChatChannelManager manager, Channel<BasePacket> pipe) {
+	public ChannelHandler(ChatChannelManager manager, Channel<BasePacket> pipe, ChatFormatter formatter) {
 		this.manager = manager;
 		this.pipe = pipe;
+		this.formatter = formatter;
 	}
 	
 	/**
@@ -84,9 +89,25 @@ public class ChannelHandler {
 	 * @param channel The channel to send on
 	 * @param sender The sender of this message
 	 */
-	public void sendFormat(String message, ChatChannel channel, CommandSender sender) {
-		// TODO: Channel formatting
-		throw new UnsupportedOperationException("Not yet implemented");
+	public void sendFormat(String message, FormattedChatChannel channel, CommandSender sender) {
+		String format = channel.getFormat();
+		
+		if (sender instanceof Player) {
+			GlobalPlayer player = Global.getPlayer(((Player)sender).getUniqueId());
+			if (channel instanceof TemporaryChatChannel) {
+				message = formatter.formatIn(message, format, (TemporaryChatChannel)channel, player);
+			} else {
+				message = formatter.format(message, format, player);
+			}
+		} else {
+			if (channel instanceof TemporaryChatChannel) {
+				message = formatter.formatConsoleIn(message, format, (TemporaryChatChannel)channel, sender.getName());
+			} else {
+				message = formatter.formatConsole(message, format, sender.getName());
+			}
+		}
+		
+		send(message, channel);
 	}
 	
 	void handleIncomming(BroadcastPacket packet) {

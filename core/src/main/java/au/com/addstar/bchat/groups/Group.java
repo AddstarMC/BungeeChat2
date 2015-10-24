@@ -3,6 +3,7 @@ package au.com.addstar.bchat.groups;
 import java.util.Map;
 
 import net.cubespace.geSuit.core.storage.Storable;
+import net.md_5.bungee.api.ChatColor;
 
 public class Group implements Storable, Comparable<Group> {
 	private final String name;
@@ -33,6 +34,15 @@ public class Group implements Storable, Comparable<Group> {
 		return color;
 	}
 	
+	public String getColorFormatted() {
+		String formatted = "";
+		for (char c : color.toCharArray()) {
+			formatted += ChatColor.COLOR_CHAR + String.valueOf(c);
+		}
+		
+		return formatted;
+	}
+	
 	public void setColor(String color) {
 		this.color = color;
 	}
@@ -50,6 +60,9 @@ public class Group implements Storable, Comparable<Group> {
 	}
 	
 	public void setPrefix(String prefix) {
+		if (prefix != null) {
+			prefix = ChatColor.translateAlternateColorCodes('&', prefix); 
+		}
 		this.prefix = prefix;
 	}
 	
@@ -58,6 +71,9 @@ public class Group implements Storable, Comparable<Group> {
 	}
 	
 	public void setSuffix(String suffix) {
+		if (suffix != null) {
+			suffix = ChatColor.translateAlternateColorCodes('&', suffix); 
+		}
 		this.suffix = suffix;
 	}
 	

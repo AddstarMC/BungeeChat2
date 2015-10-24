@@ -13,24 +13,24 @@ import au.com.addstar.bchat.groups.GroupManager;
 import net.cubespace.geSuit.core.Global;
 import net.cubespace.geSuit.core.GlobalPlayer;
 
-public class GroupListener implements Listener {
+public class StateListener implements Listener {
 	private final GroupManager groupManager;
 	
-	public GroupListener(GroupManager groupManager) {
+	public StateListener(GroupManager groupManager) {
 		this.groupManager = groupManager;
 	}
 	
 	@EventHandler(priority=EventPriority.MONITOR)
 	public void onPlayerJoin(PlayerJoinEvent event) {
-		updateGroup(event.getPlayer());
+		updateState(event.getPlayer());
 	}
 	
 	@EventHandler(priority=EventPriority.MONITOR)
 	public void onPlayerChat(AsyncPlayerChatEvent event) {
-		updateGroup(event.getPlayer());
+		updateState(event.getPlayer());
 	}
 	
-	private void updateGroup(Player bPlayer) {
+	private void updateState(Player bPlayer) {
 		// Update players group setting
 		GlobalPlayer player = Global.getPlayer(bPlayer.getUniqueId());
 		
@@ -40,6 +40,7 @@ public class GroupListener implements Listener {
 			player.addAttachment(attachment);
 		}
 		
+		// Find group
 		Group group = groupManager.getHighestGroup(g -> {
 			if (g.getPermission() != null) {
 				return bPlayer.hasPermission(g.getPermission());
@@ -49,6 +50,12 @@ public class GroupListener implements Listener {
 		});
 		
 		attachment.setGroup(group);
+		
+		// Update other state info
+		attachment.setWorld(bPlayer.getWorld().getName());
+		if (Global.getServer() != null) {
+			attachment.setServer(Global.getServer().getName());
+		}
 		
 		player.saveIfModified();
 	}
