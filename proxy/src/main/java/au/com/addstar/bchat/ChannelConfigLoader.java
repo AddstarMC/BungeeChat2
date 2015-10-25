@@ -3,6 +3,7 @@ package au.com.addstar.bchat;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,6 +36,7 @@ public class ChannelConfigLoader {
 		loadDefault(config);
 		loadChannels(config);
 		loadTemplates(config);
+		loadDefaults(config);
 	}
 
 	private ChatChannel loadDefault(Configuration config) {
@@ -203,5 +205,56 @@ public class ChannelConfigLoader {
 		template.setUseHighlighter(useHighlighter);
 
 		manager.addTemplate(template);
+	}
+	
+	private void loadDefaults(Configuration config) {
+		Configuration defaultsSection = config.getSection("defaultChannels");
+		if (defaultsSection == null) {
+			return;
+		}
+		
+		for (String key : defaultsSection.getKeys()) {
+			try {
+				if (key.equals("GLOBAL")) {
+					manager.setDefaultChannel(getAndCheckChannel(defaultsSection.getString(key)));
+				} else {
+					if (defaultsSection.get(key) instanceof Map<?, ?>) {
+						loadServerDefaults(key, defaultsSection.getSection(key));
+					} else {
+						manager.setDefaultChannel(key, getAndCheckChannel(defaultsSection.getString(key)));
+					}
+				}
+			} catch (IllegalArgumentException e) {
+				logger.warning("Invalid default channel definition for " + key + ": " + e.getMessage());
+			}
+		}
+	}
+	
+	private void loadServerDefaults(String server, Configuration section) {
+		for (String world : section.getKeys()) {
+			try {
+				if (world.equals("GLOBAL")) {
+					manager.setDefaultChannel(server, getAndCheckChannel(section.getString(world)));
+				} else {
+					manager.setDefaultChannel(server, world, getAndCheckChannel(section.getString(world)));
+				}
+			} catch (IllegalArgumentException e) {
+				throw new IllegalArgumentException(e.getMessage() + " for world " + world);
+			}
+		}
+	}
+	
+	// Do a check and translate default channel
+	private ChatChannel getAndCheckChannel(String name) {
+		if (name.equals("default")) {
+			return manager.getChannel(ChatChannelManager.DefaultChannel);
+		}
+		
+		ChatChannel channel = manager.getChannel(name);
+		if (channel == null) {
+			throw new IllegalArgumentException("Unknown channel " + name);
+		}
+		
+		return channel;
 	}
 }

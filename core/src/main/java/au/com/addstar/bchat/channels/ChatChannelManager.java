@@ -4,17 +4,23 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import au.com.addstar.bchat.packets.BasePacket;
 import au.com.addstar.bchat.packets.ReloadPacket;
 import au.com.addstar.bchat.packets.ReloadPacket.ReloadType;
+import net.cubespace.geSuit.core.GlobalServer;
 import net.cubespace.geSuit.core.channel.Channel;
 import net.cubespace.geSuit.core.storage.StorageInterface;
 import net.cubespace.geSuit.core.storage.StorageSection;
 
 public class ChatChannelManager {
+	public static final String DefaultChannel = "";
+	private static final String Global = "#global";
+	
 	private final StorageInterface backend;
 	private final Channel<BasePacket> channel;
 	
@@ -22,6 +28,7 @@ public class ChatChannelManager {
 	private final Map<String, ChatChannelTemplate> templateMap;
 	
 	private final Map<String, CommandChatChannel> commandMap;
+	private final Map<String, Map<String, String>> defaultChannelMap;
 	
 	public ChatChannelManager(StorageInterface backend, Channel<BasePacket> channel) {
 		this.backend = backend;
@@ -30,6 +37,8 @@ public class ChatChannelManager {
 		channelMap = Collections.synchronizedMap(Maps.newHashMap());
 		templateMap = Collections.synchronizedMap(Maps.newHashMap());
 		commandMap = Collections.synchronizedMap(Maps.newHashMap());
+		
+		defaultChannelMap = Maps.newHashMap();
 	}
 	
 	private void loadChannels() {
@@ -128,12 +137,64 @@ public class ChatChannelManager {
 		}
 	}
 	
+	private void loadDefaultChannels() {
+		synchronized (defaultChannelMap) {
+			List<String> servers = backend.getListString("defaults");
+			
+			// Remove any invalid templates
+			Iterator<String> it = defaultChannelMap.keySet().iterator();
+			while (it.hasNext()) {
+				String key = it.next();
+				if (!servers.contains(key)) {
+					it.remove();
+				}
+			}
+			
+			StorageSection section = backend.getSubsection("default");
+			// Load defaults
+			for (String serverName : servers) {
+				Map<String, String> map = defaultChannelMap.get(serverName);
+				if (map == null) {
+					map = Maps.newHashMap();
+					defaultChannelMap.put(serverName, map);
+				}
+				
+				if (serverName.equals(Global)) {
+					// Special global def
+					map.put(Global, section.getString(Global, ""));
+				} else {
+					// Normal server def
+					map.clear();
+					Map<String, String> target = section.getMap(serverName, Collections.emptyMap());
+					map.putAll(target);
+				}
+			}
+		}
+	}
+	
+	private void saveDefaultChannels() {
+		synchronized (defaultChannelMap) {
+			List<String> servers = Lists.newArrayList(defaultChannelMap.keySet());
+			backend.set("defaults", servers);
+			
+			StorageSection section = backend.getSubsection("default");
+			for (String server : defaultChannelMap.keySet()) {
+				if (server.equals(Global)) {
+					section.set(Global, defaultChannelMap.get(server).getOrDefault(Global, ""));
+				} else {
+					section.set(server, defaultChannelMap.get(server));
+				}
+			}
+		}
+	}
+	
 	/**
 	 * Reloads all channels and templates from the backend.
 	 */
 	public void load() {
 		loadTemplates();
 		loadChannels();
+		loadDefaultChannels();
 	}
 	
 	/**
@@ -142,6 +203,7 @@ public class ChatChannelManager {
 	public void save() {
 		saveTemplates();
 		saveChannels();
+		saveDefaultChannels();
 		
 		backend.updateAtomic();
 		channel.broadcast(new ReloadPacket(ReloadType.Channels));
@@ -225,5 +287,97 @@ public class ChatChannelManager {
 	
 	public ChatChannelTemplate getTemplate(String name) {
 		return templateMap.get(name);
+	}
+	
+	/**
+	 * Gets the channel chat is sent to for a server
+	 * @param server The server
+	 * @return The channel to send chat to.
+	 */
+	public ChatChannel getDefaultChannel(GlobalServer server) {
+		Map<String, String> map = defaultChannelMap.get(server.getName());
+		if (map == null) {
+			map = defaultChannelMap.getOrDefault(Global, Collections.emptyMap());
+		}
+		
+		ChatChannel channel = null;
+		if (map.containsKey(Global)) {
+			String channelName = map.get(Global);
+			channel = channelMap.get(channelName);
+		}
+		
+		if (channel == null) {
+			channel = channelMap.get(ChatChannelManager.DefaultChannel);
+		}
+		
+		return channel;
+	}
+	
+	/**
+	 * Gets the channel chat is sent to for a server and world
+	 * @param server The server
+	 * @param world The world
+	 * @return The channel to send chat to.
+	 */
+	public ChatChannel getDefaultChannel(GlobalServer server, String world) {
+		Map<String, String> map = defaultChannelMap.get(server.getName());
+		if (map == null) {
+			map = defaultChannelMap.getOrDefault(Global, Collections.emptyMap());
+		}
+		
+		ChatChannel channel = null;
+		if (map.containsKey(world)) {
+			String channelName = map.get(world);
+			channel = channelMap.get(channelName);
+		} else if (map.containsKey(Global)) {
+			String channelName = map.get(Global);
+			channel = channelMap.get(channelName);
+		}
+		
+		if (channel == null) {
+			channel = channelMap.get(ChatChannelManager.DefaultChannel);
+		}
+		
+		return channel;
+	}
+	
+	private void setDefaultChannel0(String server, String world, ChatChannel channel) {
+		Map<String, String> map = defaultChannelMap.get(server);
+		if (map == null) {
+			map = Maps.newHashMap();
+			defaultChannelMap.put(server, map);
+		}
+		
+		map.put(world, channel.getName());
+	}
+	
+	/**
+	 * Sets the default channel for a server. This is used if no world specific value is available
+	 * @param server The server to set it on
+	 * @param channel The channel to default to
+	 */
+	public void setDefaultChannel(String server, ChatChannel channel) {
+		Preconditions.checkArgument(!server.equals(Global));
+		setDefaultChannel0(server, Global, channel);
+	}
+	
+	/**
+	 * Sets the default channel for a server and world.
+	 * @param server The server to set it on
+	 * @param world The world to set it in
+	 * @param channel The channel to default to
+	 */
+	public void setDefaultChannel(String server, String world, ChatChannel channel) {
+		Preconditions.checkArgument(!server.equals(Global));
+		Preconditions.checkArgument(!world.equals(Global));
+		setDefaultChannel0(server, world, channel);
+	}
+	
+	/**
+	 * Sets the global default channel. This is used if no more specific defaults exists
+	 * @param channel The channel to default to
+	 */
+	public void setDefaultChannel(ChatChannel channel) {
+		setDefaultChannel0(Global, Global, channel);
 	}
 }
