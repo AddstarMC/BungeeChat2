@@ -2,6 +2,7 @@ package au.com.addstar.bchat;
 
 import java.util.concurrent.Executors;
 
+import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -11,6 +12,7 @@ import au.com.addstar.bchat.channels.ChannelHandler;
 import au.com.addstar.bchat.channels.ChannelManagerListener;
 import au.com.addstar.bchat.channels.ChatChannelManager;
 import au.com.addstar.bchat.channels.PacketListener;
+import au.com.addstar.bchat.commands.BungeeChatCommand;
 import au.com.addstar.bchat.groups.GroupManager;
 import au.com.addstar.bchat.groups.GroupManagerListener;
 import au.com.addstar.bchat.groups.GroupPermissionHandler;
@@ -39,6 +41,7 @@ public class BungeeChat extends JavaPlugin {
 		setupGroupManager(backend);
 		setupHandlers();
 		registerListeners();
+		registerCommands();
 	}
 	
 	private void setupChannel() {
@@ -76,5 +79,13 @@ public class BungeeChat extends JavaPlugin {
 	private void registerListeners() {
 		getServer().getPluginManager().registerEvents(new ChatListener(channelManager, handler), this);
 		getServer().getPluginManager().registerEvents(new StateListener(groupManager), this);
+	}
+	
+	private void registerCommands() {
+		// /bungeechat command
+		PluginCommand command = getCommand("bungeechat");
+		BungeeChatCommand bchat = new BungeeChatCommand();
+		command.setExecutor(bchat);
+		command.setTabCompleter(bchat);
 	}
 }

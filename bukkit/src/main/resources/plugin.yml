@@ -27,7 +27,7 @@ permission:
       bungeechat.color.e: true
       bungeechat.color.f: true
   
-  bungeechat.format.*:
+  bungeechat.format:
     default: op
     children:
       bungeechat.format.reset: true
@@ -48,5 +48,4 @@ commands:
     permission: bungeechat.command.runchatas
   bungeechat:
     usage: /<command> <options>
-    permission: bungeechat.command.bungeechat
     aliases: [bchat]
