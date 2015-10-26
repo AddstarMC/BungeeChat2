@@ -32,7 +32,7 @@ public class ChatListener implements Listener {
 		ChatChannel channel = manager.getDefaultChannel(Global.getServer(), event.getPlayer().getWorld().getName());
 		GlobalPlayer sender = Global.getPlayer(event.getPlayer().getUniqueId());
 		
-		// TODO: Chat color formatting
+		event.setMessage(ChatColorizer.colorizeWithPermission(event.getMessage(), event.getPlayer()).trim());
 		
 		// Update chat formatting for other plugins
 		if (channel instanceof FormattedChatChannel) {
@@ -123,7 +123,7 @@ public class ChatListener implements Listener {
 			}
 		}
 		
-		// TODO: chat colour code formatting
+		message = ChatColorizer.colorizeWithPermission(message, sender);
 		message = message.trim();
 		
 		if (ChatColor.stripColor(message).trim().isEmpty()) {

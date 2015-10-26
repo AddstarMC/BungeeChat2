@@ -6,6 +6,37 @@ main: au.com.addstar.bchat.BungeeChat
 
 depend: [geSuitBukkit]
 
+permission:
+  bungeechat.color:
+    default: op
+    children:
+      bungeechat.color.0: true
+      bungeechat.color.1: true
+      bungeechat.color.2: true
+      bungeechat.color.3: true
+      bungeechat.color.4: true
+      bungeechat.color.5: true
+      bungeechat.color.6: true
+      bungeechat.color.7: true
+      bungeechat.color.8: true
+      bungeechat.color.9: true
+      bungeechat.color.a: true
+      bungeechat.color.b: true
+      bungeechat.color.c: true
+      bungeechat.color.d: true
+      bungeechat.color.e: true
+      bungeechat.color.f: true
+  
+  bungeechat.format.*:
+    default: op
+    children:
+      bungeechat.format.reset: true
+      bungeechat.format.bold: true
+      bungeechat.format.italic: true
+      bungeechat.format.underline: true
+      bungeechat.format.strikethrough: true
+      bungeechat.format.magic: true
+
 commands:
   runchat:
     usage: /<command> <channel> <message>
