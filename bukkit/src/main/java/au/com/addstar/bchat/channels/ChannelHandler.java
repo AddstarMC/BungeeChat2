@@ -82,6 +82,26 @@ public class ChannelHandler {
 	}
 	
 	/**
+	 * Sends a raw message (previously formatted) to all non local receivers
+	 * of the channel.
+	 * @param message The message to send
+	 * @param channel The channel to send on
+	 */
+	public void sendRemoteOnly(String message, ChatChannel channel) {
+		sendRemoteOnly(TextComponent.fromLegacyText(message), channel);
+	}
+	
+	/**
+	 * Sends a raw message (previously formatted) to all non local receivers
+	 * of the channel.
+	 * @param message The message to send
+	 * @param channel The channel to send on
+	 */
+	public void sendRemoteOnly(BaseComponent[] message, ChatChannel channel) {
+		pipe.broadcast(new BroadcastPacket(channel, message, false));
+	}
+	
+	/**
 	 * Sends a message to all receivers of the channel.
 	 * This message will be formatted in accordance with
 	 * the defined format on the channel.
@@ -144,5 +164,9 @@ public class ChannelHandler {
 			
 			player.spigot().sendMessage(message);
 		}
+	}
+	
+	public ChatFormatter getFormatter() {
+		return formatter;
 	}
 }

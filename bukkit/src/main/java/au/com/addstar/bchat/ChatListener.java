@@ -10,8 +10,13 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.server.ServerCommandEvent;
 
 import au.com.addstar.bchat.channels.ChannelHandler;
+import au.com.addstar.bchat.channels.ChannelScope;
+import au.com.addstar.bchat.channels.ChatChannel;
 import au.com.addstar.bchat.channels.ChatChannelManager;
 import au.com.addstar.bchat.channels.CommandChatChannel;
+import au.com.addstar.bchat.channels.FormattedChatChannel;
+import net.cubespace.geSuit.core.Global;
+import net.cubespace.geSuit.core.GlobalPlayer;
 
 public class ChatListener implements Listener {
 	private final ChatChannelManager manager;
@@ -24,12 +29,57 @@ public class ChatListener implements Listener {
 	
 	@EventHandler(priority=EventPriority.LOWEST, ignoreCancelled=true)
 	public void onChatPre(AsyncPlayerChatEvent event) {
-		// TODO: Set the format and change receivers
+		ChatChannel channel = manager.getDefaultChannel(Global.getServer(), event.getPlayer().getWorld().getName());
+		GlobalPlayer sender = Global.getPlayer(event.getPlayer().getUniqueId());
+		
+		// TODO: Chat color formatting
+		
+		// Update chat formatting for other plugins
+		if (channel instanceof FormattedChatChannel) {
+			String format;
+			format = ((FormattedChatChannel)channel).getFormat();
+			format = handler.getFormatter().format(event.getMessage(), format, sender);
+			event.setFormat(format);
+		}
+		
+		// Reduce scope if needed
+		if (channel.getScope() == ChannelScope.WORLD) {
+			event.getRecipients().removeIf((p) -> {
+				return p.getWorld() != event.getPlayer().getWorld();
+			});
+		}
+		
+		// Remove those not permitted to see the chat
+		if (channel.getListenPermission().isPresent()) {
+			event.getRecipients().removeIf((p) -> {
+				if (p == event.getPlayer()) {
+					// Sender is excluded, they should always see their chat
+					return false;
+				} else {
+					return !p.hasPermission(channel.getListenPermission().get());
+				}
+			});
+		}
 	}
 	
 	@EventHandler(priority=EventPriority.MONITOR, ignoreCancelled=true)
 	public void onChatPost(AsyncPlayerChatEvent event) {
-		// TODO: Send off the chat to those that should receive it
+		ChatChannel channel = manager.getDefaultChannel(Global.getServer(), event.getPlayer().getWorld().getName());
+		GlobalPlayer sender = Global.getPlayer(event.getPlayer().getUniqueId());
+		
+		// Get the final message to display
+		String finalMessage;
+		if (channel instanceof FormattedChatChannel) {
+			finalMessage = ((FormattedChatChannel)channel).getFormat();
+			finalMessage = handler.getFormatter().format(event.getMessage(), finalMessage, sender);
+		} else {
+			finalMessage = String.format(event.getFormat(), sender.getDisplayName(), event.getMessage());
+		}
+		
+		// Send if needed
+		if (channel.getScope() == ChannelScope.GLOBAL) {
+			handler.sendRemoteOnly(finalMessage, channel);
+		}
 	}
 	
 	@EventHandler(priority=EventPriority.LOW, ignoreCancelled=true)
