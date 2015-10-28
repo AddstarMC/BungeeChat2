@@ -5,11 +5,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.logging.Logger;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import au.com.addstar.bchat.Debugger;
 import au.com.addstar.bchat.packets.BasePacket;
 import au.com.addstar.bchat.packets.ReloadPacket;
 import au.com.addstar.bchat.packets.ReloadPacket.ReloadType;
@@ -102,6 +104,9 @@ public class GroupManager {
 	}
 	
 	public void load() {
+		Logger debug = Debugger.getLogger(Debugger.Backend);
+		debug.info("Loading groups from backend");
+		
 		List<String> groups = backend.getListString("groups");
 		if (groups == null) {
 			return;
@@ -114,6 +119,7 @@ public class GroupManager {
 			if (!groups.contains(key)) {
 				listener.onRemoveGroup(groupMap.get(key));
 				it.remove();
+				debug.fine("Removing absent local group " + key);
 			}
 		}
 		
@@ -135,6 +141,7 @@ public class GroupManager {
 				
 				orderedGroups.add(index, group);
 				listener.onAddGroup(group);
+				debug.fine("Adding local group " + groupName);
 			}
 		}
 		
@@ -149,6 +156,9 @@ public class GroupManager {
 	}
 	
 	public void save() {
+		Logger debug = Debugger.getLogger(Debugger.Backend);
+		debug.info("Saving groups to backend");
+		
 		List<String> groupNames = Lists.newArrayList(groupMap.keySet());
 		backend.set("groups", groupNames);
 		

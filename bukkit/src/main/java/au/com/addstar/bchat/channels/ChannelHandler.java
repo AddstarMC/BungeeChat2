@@ -6,6 +6,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import au.com.addstar.bchat.ChatFormatter;
+import au.com.addstar.bchat.Debugger;
 import au.com.addstar.bchat.packets.BasePacket;
 import au.com.addstar.bchat.packets.BroadcastPacket;
 import net.cubespace.geSuit.core.Global;
@@ -137,7 +138,8 @@ public class ChannelHandler {
 		
 		ChatChannel channel = manager.getChannel(packet.channelId);
 		if (channel == null) {
-			return; // TODO: debug log
+			Debugger.getLogger(Debugger.Packet).warning("Invalid channel " + packet.channelId + " in packet");
+			return;
 		}
 		
 		broadcastLocal(packet.message, channel, null);

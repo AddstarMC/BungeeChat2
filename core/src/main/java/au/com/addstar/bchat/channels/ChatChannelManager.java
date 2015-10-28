@@ -4,11 +4,13 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import au.com.addstar.bchat.Debugger;
 import au.com.addstar.bchat.packets.BasePacket;
 import au.com.addstar.bchat.packets.ReloadPacket;
 import au.com.addstar.bchat.packets.ReloadPacket.ReloadType;
@@ -44,12 +46,15 @@ public class ChatChannelManager {
 	private void loadChannels() {
 		synchronized(channelMap) {
 			List<String> channelList = backend.getListString("channels");
+			Logger debug = Debugger.getLogger(Debugger.Backend);
+			debug.info("Loading channels from backend");
 			
 			// Remove any invalid channels
 			Iterator<String> it = channelMap.keySet().iterator();
 			while (it.hasNext()) {
 				String key = it.next();
 				if (!channelList.contains(key)) {
+					debug.fine("Removing absent local channel " + key);
 					it.remove();
 				}
 			}
@@ -79,8 +84,10 @@ public class ChatChannelManager {
 				channelSection.getStorable(channelName, channel);
 				
 				channelMap.put(channelName, channel);
+				debug.fine("Adding local channel " + channelName);
 				if (channel instanceof CommandChatChannel) {
 					CommandChatChannel cChannel = (CommandChatChannel)channel;
+					debug.finer("Registering commands for " + channelName + ": " + cChannel.getCommands());
 					for (String command : cChannel.getCommands()) {
 						commandMap.put(command.toLowerCase(), cChannel);
 					}
@@ -91,18 +98,25 @@ public class ChatChannelManager {
 	
 	private void saveChannels() {
 		synchronized (channelMap) {
+			Logger debug = Debugger.getLogger(Debugger.Backend);
+			debug.info("Saving channels to backend");
+			
 			List<String> channels = Lists.newArrayList(channelMap.keySet());
 			backend.set("channels", channels);
 			
 			StorageSection channelSection = backend.getSubsection("channel");
 			for (ChatChannel channel : channelMap.values()) {
 				channelSection.set(channel.getName(), channel);
+				debug.fine("Pushing channel " + channel.getName());
 			}
 		}
 	}
 	
 	private void loadTemplates() {
 		synchronized (templateMap) {
+			Logger debug = Debugger.getLogger(Debugger.Backend);
+			debug.info("Loading templates from backend");
+			
 			List<String> templateList = backend.getListString("templates");
 			
 			// Remove any invalid templates
@@ -110,6 +124,7 @@ public class ChatChannelManager {
 			while (it.hasNext()) {
 				String key = it.next();
 				if (!templateList.contains(key)) {
+					debug.fine("Removing absent local template " + key);
 					it.remove();
 				}
 			}
@@ -121,24 +136,32 @@ public class ChatChannelManager {
 				templateSection.getStorable(templateName, template);
 				
 				templateMap.put(templateName, template);
+				debug.fine("Adding local template " + templateName);
 			}
 		}
 	}
 	
 	private void saveTemplates() {
 		synchronized (templateMap) {
+			Logger debug = Debugger.getLogger(Debugger.Backend);
+			debug.info("Saving templates to backend");
+			
 			List<String> templates = Lists.newArrayList(templateMap.keySet());
 			backend.set("templates", templates);
 			
 			StorageSection templateSection = backend.getSubsection("template");
 			for (ChatChannelTemplate template : templateMap.values()) {
 				templateSection.set(template.getName(), template);
+				debug.fine("Pushing template " + template.getName());
 			}
 		}
 	}
 	
 	private void loadDefaultChannels() {
 		synchronized (defaultChannelMap) {
+			Logger debug = Debugger.getLogger(Debugger.Backend);
+			debug.info("Loading default channels from backend");
+			
 			List<String> servers = backend.getListString("defaults");
 			
 			// Remove any invalid templates
@@ -147,6 +170,7 @@ public class ChatChannelManager {
 				String key = it.next();
 				if (!servers.contains(key)) {
 					it.remove();
+					debug.fine("Removing absent local default " + key);
 				}
 			}
 			
@@ -168,12 +192,17 @@ public class ChatChannelManager {
 					Map<String, String> target = section.getMap(serverName, Collections.emptyMap());
 					map.putAll(target);
 				}
+				
+				debug.fine("Adding local default " + serverName + " = " + map);
 			}
 		}
 	}
 	
 	private void saveDefaultChannels() {
 		synchronized (defaultChannelMap) {
+			Logger debug = Debugger.getLogger(Debugger.Backend);
+			debug.info("Saving channel defaults to backend");
+			
 			List<String> servers = Lists.newArrayList(defaultChannelMap.keySet());
 			backend.set("defaults", servers);
 			
@@ -207,6 +236,7 @@ public class ChatChannelManager {
 		
 		backend.updateAtomic();
 		channel.broadcast(new ReloadPacket(ReloadType.Channels));
+		Debugger.getLogger(Debugger.Packet).info("Broadcasting reload for channels");
 	}
 	
 	public TemporaryChatChannel createTemporaryChannel(String name, ChatChannelTemplate template) {

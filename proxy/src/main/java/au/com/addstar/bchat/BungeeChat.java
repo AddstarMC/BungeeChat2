@@ -10,6 +10,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import au.com.addstar.bchat.channels.ChannelManagerListener;
 import au.com.addstar.bchat.channels.ChatChannelManager;
+import au.com.addstar.bchat.commands.BungeeChatCommand;
 import au.com.addstar.bchat.groups.GroupManager;
 import au.com.addstar.bchat.groups.GroupManagerListener;
 import au.com.addstar.bchat.packets.BasePacket;
@@ -28,6 +29,7 @@ public class BungeeChat extends Plugin {
 	
 	@Override
 	public void onEnable() {
+		Debugger.initialize(getLogger());
 		try {
 			prepareDataFolder();
 		} catch (IOException e) {
@@ -44,6 +46,7 @@ public class BungeeChat extends Plugin {
 
 		loadChannels(backend);
 		loadGroups(backend);
+		registerCommands();
 	}
 
 	private void prepareDataFolder() throws IOException {
@@ -109,5 +112,9 @@ public class BungeeChat extends Plugin {
 			// Push to the backend
 			groupManager.save();
 		}
+	}
+	
+	private void registerCommands() {
+		getProxy().getPluginManager().registerCommand(this, new BungeeChatCommand());
 	}
 }

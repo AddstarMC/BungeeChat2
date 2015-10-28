@@ -6,47 +6,43 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
-
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import au.com.addstar.bchat.Debugger;
 import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.CommandSender;
+import net.md_5.bungee.api.plugin.Command;
+import net.md_5.bungee.api.plugin.TabExecutor;
 
-public class BungeeChatCommand implements CommandExecutor, TabCompleter {
+public class BungeeChatCommand extends Command implements TabExecutor {
+	public BungeeChatCommand() {
+		super("!bungeechat", "bungeechat.command.bungeechat", "!bchat");
+	}
+	
 	@Override
-	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+	public void execute(CommandSender sender, String[] args) {
 		if (args.length == 0) {
-			return false;
-		}
-		
-		// Check permission, ignore for null command however
-		if (!sender.hasPermission("bungeechat.command.bungeechat") && !args[0].equalsIgnoreCase("null")) {
-			sender.sendMessage(ChatColor.RED + "You do not have permission to do that");
-			return true;
+			sender.sendMessage("/!bungeechat <reload|debug> [<options>]");
+			return;
 		}
 		
 		switch (args[0].toLowerCase()) {
-		case "null":
-			return true;
 		case "reload":
 			// TODO: Reload command
-			return true;
+			return;
 		case "debug":
 			handleDebug(sender, Arrays.copyOfRange(args, 1, args.length));
-			return true;
+			return;
 		default:
-			return false;
+			sender.sendMessage("/!bungeechat <reload|debug> [<options>]");
+			return;
 		}
 	}
 	
 	private void handleDebug(CommandSender sender, String[] args) {
 		if (args.length < 2) {
-			sender.sendMessage("/bungeechat debug <type> <level>");
+			sender.sendMessage("/!bungeechat debug <type> <level>");
 			return;
 		}
 		
@@ -79,7 +75,7 @@ public class BungeeChatCommand implements CommandExecutor, TabCompleter {
 	}
 	
 	@Override
-	public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+	public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
 		List<String> results = Collections.emptyList();
 		if (args.length == 1) {
 			results = Arrays.asList("reload", "debug");

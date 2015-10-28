@@ -33,6 +33,7 @@ public class BungeeChat extends JavaPlugin {
 	
 	@Override
 	public void onEnable() {
+		Debugger.initialize(getLogger());
 		executorService = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
 		
 		StorageInterface backend = Global.getStorageProvider().create("bungeechat");
