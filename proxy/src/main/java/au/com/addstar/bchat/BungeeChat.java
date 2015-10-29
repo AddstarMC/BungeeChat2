@@ -3,6 +3,7 @@ package au.com.addstar.bchat;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -15,6 +16,8 @@ import au.com.addstar.bchat.groups.GroupManager;
 import au.com.addstar.bchat.groups.GroupManagerListener;
 import au.com.addstar.bchat.packets.BasePacket;
 import au.com.addstar.bchat.packets.PacketManager;
+import au.com.addstar.bchat.tab.TabListener;
+import au.com.addstar.bchat.tab.TabManager;
 import net.cubespace.geSuit.core.Global;
 import net.cubespace.geSuit.core.channel.Channel;
 import net.cubespace.geSuit.core.storage.StorageInterface;
@@ -26,6 +29,7 @@ public class BungeeChat extends Plugin {
 	private PacketManager packetManager;
 	private Channel<BasePacket> channel;
 	private ListeningExecutorService executorService;
+	private TabManager tabManager;
 	
 	@Override
 	public void onEnable() {
@@ -46,6 +50,7 @@ public class BungeeChat extends Plugin {
 
 		loadChannels(backend);
 		loadGroups(backend);
+		setupTabList();
 		registerCommands();
 	}
 
@@ -112,6 +117,12 @@ public class BungeeChat extends Plugin {
 			// Push to the backend
 			groupManager.save();
 		}
+	}
+	
+	private void setupTabList() {
+		tabManager = new TabManager(groupManager, 20, TimeUnit.MILLISECONDS);
+		tabManager.startSendingTask(this, getProxy().getScheduler());
+		getProxy().getPluginManager().registerListener(this, new TabListener(tabManager));
 	}
 	
 	private void registerCommands() {

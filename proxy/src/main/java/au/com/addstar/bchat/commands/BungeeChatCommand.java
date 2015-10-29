@@ -48,7 +48,7 @@ public class BungeeChatCommand extends Command implements TabExecutor {
 		
 		// Parse logger
 		Logger logger = null;
-		for (String type : Debugger.KnownTypes) {
+		for (String type : Debugger.KnownTypesProxy) {
 			if (type.equalsIgnoreCase(args[0])) {
 				logger = Debugger.getLogger(type);
 				break;
@@ -56,7 +56,7 @@ public class BungeeChatCommand extends Command implements TabExecutor {
 		}
 		
 		if (logger == null) {
-			sender.sendMessage(ChatColor.RED + "Unknown type '" + args[0] + "'. Available types: " + Debugger.KnownTypes);
+			sender.sendMessage(ChatColor.RED + "Unknown type '" + args[0] + "'. Available types: " + Debugger.KnownTypesProxy);
 			return;
 		}
 		
@@ -82,7 +82,7 @@ public class BungeeChatCommand extends Command implements TabExecutor {
 		} else {
 			if (args[0].equalsIgnoreCase("debug")) {
 				if (args.length == 2) {
-					results = Debugger.KnownTypes;
+					results = Debugger.KnownTypesProxy;
 				} else if (args.length == 3) {
 					results = Arrays.asList("all", "finest", "finer", "fine", "config", "info", "warning", "severe", "off");
 				}

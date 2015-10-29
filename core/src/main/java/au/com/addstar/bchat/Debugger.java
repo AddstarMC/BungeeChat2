@@ -3,6 +3,7 @@ package au.com.addstar.bchat;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -13,8 +14,10 @@ import com.google.common.collect.Maps;
 public class Debugger {
 	public static final String Packet = "Packet";
 	public static final String Backend = "Backend";
+	public static final String Tab = "Tab";
 	
 	public static final List<String> KnownTypes = Arrays.asList(Packet, Backend);
+	public static final List<String> KnownTypesProxy = Arrays.asList(Packet, Backend, Tab);
 	
 	private static Map<String, Logger> loggers = Maps.newHashMap();
 	private static Logger parent;
@@ -82,5 +85,30 @@ public class Debugger {
 		String id = "bungeechat.debug." + type.toLowerCase();
 		
 		return loggers.get(id);
+	}
+	
+	/**
+	 * Creates a supplier that will format the string using the provided arguments
+	 * @param format The format string. Same as {@code String#format}
+	 * @param arguments The arguments for the format. If any of these are {@link Supplier}s then they will be resolved first
+	 * @return A supplier to get the formatted string
+	 */
+	public static Supplier<String> format(final String format, final Object... arguments) {
+		return new Supplier<String>() {
+			@Override
+			public String get() {
+				// Resolve arguments
+				Object[] resolved = new Object[arguments.length];
+				for (int i = 0; i < arguments.length; ++i) {
+					if (arguments[i] instanceof Supplier<?>) {
+						resolved[i] = ((Supplier<?>)arguments[i]).get();
+					} else {
+						resolved[i] = arguments[i];
+					}
+				}
+				
+				return String.format(format, resolved);
+			}
+		};
 	}
 }
