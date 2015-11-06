@@ -77,6 +77,12 @@ public class BungeeChat extends Plugin {
 		channelManager = new ChatChannelManager(backend, channel);
 		channel.addReceiver(new ChannelManagerListener(channelManager, executorService));
 		
+		loadChannelConfig();
+	}
+	
+	private void loadChannelConfig() {
+		channelManager.clear();
+		
 		// Populate with config loaded channels
 		File configFile = new File(getDataFolder(), "channels.yml");
 		if (configFile.exists()) {
@@ -103,6 +109,12 @@ public class BungeeChat extends Plugin {
 		groupManager = new GroupManager(backend, channel);
 		channel.addReceiver(new GroupManagerListener(groupManager, executorService));
 		
+		loadGroupConfig();
+	}
+	
+	private void loadGroupConfig() {
+		groupManager.clear();
+		
 		// Populate with config loaded groups
 		File configFile = new File(getDataFolder(), "groups.yml");
 		if (configFile.exists()) {
@@ -126,6 +138,11 @@ public class BungeeChat extends Plugin {
 	}
 	
 	private void registerCommands() {
-		getProxy().getPluginManager().registerCommand(this, new BungeeChatCommand());
+		getProxy().getPluginManager().registerCommand(this, new BungeeChatCommand(this));
+	}
+	
+	public void reload() {
+		loadChannelConfig();
+		loadGroupConfig();
 	}
 }

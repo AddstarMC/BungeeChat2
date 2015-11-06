@@ -43,6 +43,13 @@ public class ChatChannelManager {
 		defaultChannelMap = Maps.newHashMap();
 	}
 	
+	public void clear() {
+		channelMap.clear();
+		templateMap.clear();
+		commandMap.clear();
+		defaultChannelMap.clear();
+	}
+	
 	private void loadChannels() {
 		synchronized(channelMap) {
 			List<String> channelList = backend.getListString("channels");
@@ -55,6 +62,16 @@ public class ChatChannelManager {
 				String key = it.next();
 				if (!channelList.contains(key)) {
 					debug.fine("Removing absent local channel " + key);
+					
+					// Remove command bindings
+					ChatChannel channel = channelMap.remove(key);
+					if (channel instanceof CommandChatChannel) {
+						CommandChatChannel cChannel = (CommandChatChannel)channel;
+						for (String command : cChannel.getCommands()) {
+							commandMap.remove(command.toLowerCase(), cChannel);
+						}
+					}
+					
 					it.remove();
 				}
 			}
@@ -221,6 +238,7 @@ public class ChatChannelManager {
 	 * Reloads all channels and templates from the backend.
 	 */
 	public void load() {
+		backend.reset();
 		loadTemplates();
 		loadChannels();
 		loadDefaultChannels();

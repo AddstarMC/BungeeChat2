@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+import au.com.addstar.bchat.BungeeChat;
 import au.com.addstar.bchat.Debugger;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
@@ -16,8 +17,10 @@ import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.TabExecutor;
 
 public class BungeeChatCommand extends Command implements TabExecutor {
-	public BungeeChatCommand() {
+	private final BungeeChat plugin;
+	public BungeeChatCommand(BungeeChat plugin) {
 		super("!bungeechat", "bungeechat.command.bungeechat", "!bchat");
+		this.plugin = plugin;
 	}
 	
 	@Override
@@ -29,7 +32,8 @@ public class BungeeChatCommand extends Command implements TabExecutor {
 		
 		switch (args[0].toLowerCase()) {
 		case "reload":
-			// TODO: Reload command
+			plugin.reload();
+			sender.sendMessage(ChatColor.GREEN + "All configurations reloaded");
 			return;
 		case "debug":
 			handleDebug(sender, Arrays.copyOfRange(args, 1, args.length));

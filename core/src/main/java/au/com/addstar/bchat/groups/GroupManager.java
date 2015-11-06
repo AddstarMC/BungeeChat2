@@ -39,6 +39,11 @@ public class GroupManager {
 		listener = new NullGroupListener();
 	}
 	
+	public void clear() {
+		groupMap.clear();
+		orderedGroups.clear();
+	}
+	
 	public void addGroup(Group group) throws IllegalArgumentException {
 		if (groupMap.containsKey(group.getName())) {
 			throw new IllegalArgumentException("Duplicate group");
@@ -104,6 +109,8 @@ public class GroupManager {
 	}
 	
 	public void load() {
+		backend.reset();
+		
 		Logger debug = Debugger.getLogger(Debugger.Backend);
 		debug.info("Loading groups from backend");
 		
