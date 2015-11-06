@@ -127,7 +127,7 @@ public class ChannelHandler {
 				message = formatter.formatConsole(message, format, sender.getName());
 			}
 		}
-		
+		// TODO: Handle formatting DM channels
 		send(message, channel);
 	}
 	
@@ -160,6 +160,14 @@ public class ChannelHandler {
 			// Check listen permission
 			if (channel.getListenPermission().isPresent()) {
 				if (!player.hasPermission(channel.getListenPermission().get())) {
+					continue;
+				}
+			}
+			
+			// Check specialized DM settings 
+			if (channel instanceof DMChatChannel) {
+				DMChatChannel dm = (DMChatChannel)channel;
+				if (!dm.isParticipant(player.getUniqueId())) {
 					continue;
 				}
 			}

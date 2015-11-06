@@ -2,7 +2,10 @@ package au.com.addstar.bchat;
 
 import java.util.concurrent.Executors;
 
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.command.TabCompleter;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -13,6 +16,7 @@ import au.com.addstar.bchat.channels.ChannelManagerListener;
 import au.com.addstar.bchat.channels.ChatChannelManager;
 import au.com.addstar.bchat.channels.ChannelPacketListener;
 import au.com.addstar.bchat.commands.BungeeChatCommand;
+import au.com.addstar.bchat.commands.DMCommand;
 import au.com.addstar.bchat.groups.GroupManager;
 import au.com.addstar.bchat.groups.GroupManagerListener;
 import au.com.addstar.bchat.groups.GroupPermissionHandler;
@@ -85,9 +89,14 @@ public class BungeeChat extends JavaPlugin {
 	
 	private void registerCommands() {
 		// /bungeechat command
-		PluginCommand command = getCommand("bungeechat");
-		BungeeChatCommand bchat = new BungeeChatCommand();
-		command.setExecutor(bchat);
-		command.setTabCompleter(bchat);
+		registerCommand(getCommand("bungeechat"), new BungeeChatCommand());
+		registerCommand(getCommand("dm"), new DMCommand(channelManager, handler));
+	}
+	
+	private void registerCommand(PluginCommand command, CommandExecutor executor) {
+		command.setExecutor(executor);
+		if (executor instanceof TabCompleter) {
+			command.setTabCompleter((TabCompleter)executor);
+		}
 	}
 }

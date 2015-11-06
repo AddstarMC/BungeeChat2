@@ -25,9 +25,17 @@ default:
 #  {TGROUP}: The name of the targets group (defined in groups.yml)
 #  {TPREFIX}: The prefix for the targets group (defined in groups.yml)
 #  {TSUFFIX}: The suffix for the targets group (defined in groups.yml)
+#
+# hideSelf allows you to change whether you see your own name after formatting
+# replaceWord sets the word that is used instead of your name.
+#  {DISPLAYNAME} {RAWDISPLAYNAME} {NAME} {RAWNAME} and target variants
+#  all get replaced with replaceWord if hideSelf is true and it would be
+#  'you' 
+#  Formatting codes are supported in it
 dm:
-  format-in: '[{DISPLAYNAME}&f -> Me]: {MESSAGE}'
-  format-out: '[Me -> {DISPLAYNAME}&f]: {MESSAGE}'
+  format: '[{DISPLAYNAME}&f -> {TDISPLAYNAME}&f]: {MESSAGE}'
+  hideSelf: true
+  replaceWord: 'Me'
 
 # Here you define channels. Each channel should be given a name and a listenPermission
 # <name>:

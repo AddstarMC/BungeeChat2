@@ -3,6 +3,7 @@ package au.com.addstar.bchat;
 import com.google.common.base.Strings;
 
 import au.com.addstar.bchat.attachments.StateAttachment;
+import au.com.addstar.bchat.channels.DMChatChannel;
 import au.com.addstar.bchat.channels.TemporaryChatChannel;
 import au.com.addstar.bchat.groups.Group;
 import au.com.addstar.bchat.groups.GroupManager;
@@ -99,5 +100,77 @@ public class ChatFormatter {
 		String partial = formatConsole(message, format, consoleName);
 		partial.replace("{CHANNEL}", channel.getSubName());
 		return partial;
+	}
+	
+	/**
+	 * Formats a DM message
+	 * @param message The message to send
+	 * @param sender The sender of the dm
+	 * @param listener The player that will be receiving this (for name replacement). Can be null
+	 * @param channel The dm channel
+	 * @return The formatted string
+	 */
+	public String formatDM(String message, GlobalPlayer sender, GlobalPlayer listener, DMChatChannel channel) {
+		GlobalPlayer target;
+		
+		if (channel.getEnd1().equals(sender)) {
+			target = channel.getEnd2();
+		} else {
+			target = channel.getEnd1();
+		}
+		
+		// Get the senders state
+		StateAttachment senderState = sender.getAttachment(StateAttachment.class);
+		if (senderState == null) {
+			senderState = blankState;
+		}
+		
+		// Do sender group formatting
+		String formatted = channel.getFormat();
+		Group senderGroup = null;
+		if (senderState.getGroupName() != null) {
+			senderGroup = groupManager.getGroup(senderState.getGroupName());
+		}
+		
+		if (senderGroup == null) {
+			senderGroup = blankGroup;
+		}
+		
+		// Replace the sender tags
+		if (channel.shouldReplaceSelf() && sender.equals(listener)) {
+			formatted = formatWithGroup(formatted, senderGroup, channel.getReplaceWord(), channel.getReplaceWord(), false);
+		} else {
+			formatted = formatWithGroup(formatted, senderGroup, sender.getDisplayName(), sender.getName(), false);
+		}
+		
+		// Get the targets state
+		StateAttachment targetState = target.getAttachment(StateAttachment.class);
+		if (targetState == null) {
+			targetState = blankState;
+		}
+		
+		// Do target group formatting
+		Group targetGroup = null;
+		if (targetState.getGroupName() != null) {
+			targetGroup = groupManager.getGroup(targetState.getGroupName());
+		}
+		
+		if (targetGroup == null) {
+			targetGroup = blankGroup;
+		}
+		
+		// Replace the target tags
+		if (channel.shouldReplaceSelf() && target.equals(listener)) {
+			formatted = formatWithGroup(formatted, targetGroup, channel.getReplaceWord(), channel.getReplaceWord(), true);
+		} else {
+			formatted = formatWithGroup(formatted, targetGroup, target.getDisplayName(), target.getName(), true);
+		}
+		
+		// rest of the formatting
+		formatted = formatted.replace("{SERVER}", Strings.nullToEmpty(senderState.getServer()));
+		formatted = formatted.replace("{WORLD}", Strings.nullToEmpty(senderState.getWorld()));
+		formatted = formatted.replace("{MESSAGE}", message);
+		
+		return formatted;
 	}
 }

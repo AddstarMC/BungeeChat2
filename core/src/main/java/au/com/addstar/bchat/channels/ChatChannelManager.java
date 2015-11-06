@@ -14,8 +14,10 @@ import au.com.addstar.bchat.Debugger;
 import au.com.addstar.bchat.packets.BasePacket;
 import au.com.addstar.bchat.packets.ReloadPacket;
 import au.com.addstar.bchat.packets.ReloadPacket.ReloadType;
+import net.cubespace.geSuit.core.GlobalPlayer;
 import net.cubespace.geSuit.core.GlobalServer;
 import net.cubespace.geSuit.core.channel.Channel;
+import net.cubespace.geSuit.core.objects.Tuple;
 import net.cubespace.geSuit.core.storage.StorageInterface;
 import net.cubespace.geSuit.core.storage.StorageSection;
 
@@ -32,6 +34,8 @@ public class ChatChannelManager {
 	private final Map<String, CommandChatChannel> commandMap;
 	private final Map<String, Map<String, String>> defaultChannelMap;
 	
+	private final Map<Tuple<GlobalPlayer, GlobalPlayer>, DMChatChannel> dmChannels;
+	
 	public ChatChannelManager(StorageInterface backend, Channel<BasePacket> channel) {
 		this.backend = backend;
 		this.channel = channel;
@@ -41,6 +45,8 @@ public class ChatChannelManager {
 		commandMap = Collections.synchronizedMap(Maps.newHashMap());
 		
 		defaultChannelMap = Maps.newHashMap();
+		
+		dmChannels = Collections.synchronizedMap(Maps.newHashMap());
 	}
 	
 	public void clear() {
@@ -94,6 +100,7 @@ public class ChatChannelManager {
 					break;
 				case "temporary":
 					channel = new TemporaryChatChannel(channelName, this);
+					break;
 				default:
 					continue;
 				}
@@ -149,11 +156,25 @@ public class ChatChannelManager {
 			StorageSection templateSection = backend.getSubsection("template");
 			// Load channels
 			for (String templateName : templateList) {
-				ChatChannelTemplate template = new ChatChannelTemplate(templateName);
+				ChatChannelTemplate template;
+				String type = templateSection.getMapPartial(templateName, "type").get("type");
+				if (type != null) {
+					template = new DMChannelTemplate(templateName);
+				} else {
+					template = new ChatChannelTemplate(templateName);
+				}
+				
 				templateSection.getStorable(templateName, template);
 				
 				templateMap.put(templateName, template);
 				debug.fine("Adding local template " + templateName);
+				
+				// Update all current DMChannels
+				if (templateName.equals(DMChannelTemplate.DMName) && template instanceof DMChannelTemplate) {
+					for (DMChatChannel channel : dmChannels.values()) {
+						channel.setTemplate((DMChannelTemplate)template);
+					}
+				}
 			}
 		}
 	}
@@ -427,5 +448,46 @@ public class ChatChannelManager {
 	 */
 	public void setDefaultChannel(ChatChannel channel) {
 		setDefaultChannel0(Global, Global, channel);
+	}
+	
+	/**
+	 * Gets a direct messaging channel from one player to another.
+	 * The from and too players can be in any order
+	 * @param from One participant of the channel
+	 * @param to The other participant of the channel 
+	 * @return A DM channel to communicate on
+	 */
+	public DMChatChannel getDMChannel(GlobalPlayer from, GlobalPlayer to) {
+		Tuple<GlobalPlayer, GlobalPlayer> tuple1 = new Tuple<>(from, to);
+		Tuple<GlobalPlayer, GlobalPlayer> tuple2 = new Tuple<>(to, from);
+		
+		synchronized (dmChannels) {
+			DMChatChannel channel = dmChannels.get(tuple1);
+			if (channel == null) {
+				channel = dmChannels.get(tuple2);
+			}
+			
+			if (channel == null) {
+				channel = new DMChatChannel(from, to, getDMTemplate(), this);
+				dmChannels.put(tuple1, channel);
+			}
+			
+			return channel;
+		}
+	}
+	
+	private DMChannelTemplate getDMTemplate() {
+		return (DMChannelTemplate)templateMap.get(DMChannelTemplate.DMName);
+	}
+	
+	/**
+	 * For internal use only. Do not use
+	 * @param player
+	 */
+	public void onDisconnect(GlobalPlayer player) {
+		synchronized (dmChannels) {
+			Map<Tuple<GlobalPlayer, GlobalPlayer>, DMChatChannel> channels = Maps.filterKeys(dmChannels, (k) -> k.getA() == player || k.getB() == player);
+			channels.clear();
+		}
 	}
 }

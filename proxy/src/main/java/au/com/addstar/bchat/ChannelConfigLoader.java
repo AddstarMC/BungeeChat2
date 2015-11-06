@@ -14,6 +14,7 @@ import au.com.addstar.bchat.channels.ChatChannel;
 import au.com.addstar.bchat.channels.ChatChannelManager;
 import au.com.addstar.bchat.channels.ChatChannelTemplate;
 import au.com.addstar.bchat.channels.CommandChatChannel;
+import au.com.addstar.bchat.channels.DMChannelTemplate;
 import au.com.addstar.bchat.channels.FormattedChatChannel;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.config.Configuration;
@@ -36,6 +37,7 @@ public class ChannelConfigLoader {
 		loadDefault(config);
 		loadChannels(config);
 		loadTemplates(config);
+		loadDM(config);
 		loadDefaults(config);
 	}
 
@@ -203,6 +205,29 @@ public class ChannelConfigLoader {
 		template.setJoinPermission(joinPermission);
 		template.setScope(scope);
 		template.setUseHighlighter(useHighlighter);
+
+		manager.addTemplate(template);
+	}
+	
+	private void loadDM(Configuration config) {
+		Configuration section = config.getSection("dm");
+		if (section == null) {
+			return;
+		}
+		
+		DMChannelTemplate template = new DMChannelTemplate(DMChannelTemplate.DMName);
+
+		// Load format
+		String format = section.getString("format", "[{DISPLAYNAME}&f -> {TDISPLAYNAME}&f]: {MESSAGE}");
+		format = ChatColor.translateAlternateColorCodes('&', format);
+
+		String replaceWord = section.getString("replaceWord", "Me");
+		replaceWord = ChatColor.translateAlternateColorCodes('&', replaceWord);
+		
+		boolean hideSelf = section.getBoolean("hideSelf", true);
+		template.setFormat(format);
+		template.setReplaceSelf(hideSelf);
+		template.setReplaceWord(replaceWord);
 
 		manager.addTemplate(template);
 	}

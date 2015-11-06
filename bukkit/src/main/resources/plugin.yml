@@ -36,7 +36,8 @@ permission:
       bungeechat.format.underline: true
       bungeechat.format.strikethrough: true
       bungeechat.format.magic: true
-
+  bungeechat.command.dm:
+    default: true
 commands:
   runchat:
     usage: /<command> <channel> <message>
@@ -49,3 +50,7 @@ commands:
   bungeechat:
     usage: /<command> <options>
     aliases: [bchat]
+  dm:
+    usage: /<command> <player> <message>
+    aliases: [msg,tell,whisper,m,w,t]
+    permission: bungeechat.command.dm
