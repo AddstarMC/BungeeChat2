@@ -6,10 +6,10 @@ import au.com.addstar.bchat.packets.SendPacket;
 import net.cubespace.geSuit.core.channel.Channel;
 import net.cubespace.geSuit.core.channel.ChannelDataReceiver;
 
-public class PacketListener implements ChannelDataReceiver<BasePacket> {
+public class ChannelPacketListener implements ChannelDataReceiver<BasePacket> {
 	private final ChannelHandler handler;
 	
-	public PacketListener(ChannelHandler handler) {
+	public ChannelPacketListener(ChannelHandler handler) {
 		this.handler = handler;
 	}
 	

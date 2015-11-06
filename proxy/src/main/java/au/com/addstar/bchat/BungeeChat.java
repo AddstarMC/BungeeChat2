@@ -122,7 +122,7 @@ public class BungeeChat extends Plugin {
 	private void setupTabList() {
 		tabManager = new TabManager(groupManager, 20, TimeUnit.MILLISECONDS);
 		tabManager.startSendingTask(this, getProxy().getScheduler());
-		getProxy().getPluginManager().registerListener(this, new TabListener(tabManager));
+		getProxy().getPluginManager().registerListener(this, new TabListener(tabManager, channel));
 	}
 	
 	private void registerCommands() {

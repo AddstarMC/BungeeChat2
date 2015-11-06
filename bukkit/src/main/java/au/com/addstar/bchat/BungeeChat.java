@@ -11,7 +11,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import au.com.addstar.bchat.channels.ChannelHandler;
 import au.com.addstar.bchat.channels.ChannelManagerListener;
 import au.com.addstar.bchat.channels.ChatChannelManager;
-import au.com.addstar.bchat.channels.PacketListener;
+import au.com.addstar.bchat.channels.ChannelPacketListener;
 import au.com.addstar.bchat.commands.BungeeChatCommand;
 import au.com.addstar.bchat.groups.GroupManager;
 import au.com.addstar.bchat.groups.GroupManagerListener;
@@ -74,7 +74,8 @@ public class BungeeChat extends JavaPlugin {
 	
 	private void setupHandlers() {
 		handler = new ChannelHandler(channelManager, channel, new ChatFormatter(groupManager));
-		channel.addReceiver(new PacketListener(handler));
+		channel.addReceiver(new ChannelPacketListener(handler));
+		channel.addReceiver(new PacketListener(this));
 	}
 	
 	private void registerListeners() {

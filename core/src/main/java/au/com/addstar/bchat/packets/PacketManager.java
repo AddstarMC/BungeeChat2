@@ -19,6 +19,7 @@ public final class PacketManager {
 		registerPacket(0, ReloadPacket.class);
 		registerPacket(1, BroadcastPacket.class);
 		registerPacket(2, SendPacket.class);
+		registerPacket(3, RefreshPacket.class);
 	}
 	
 	public void registerPacket(int id, Class<? extends BasePacket> packetType) {
