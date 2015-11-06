@@ -44,7 +44,7 @@ public class TabManager {
 		handlers = Maps.newConcurrentMap();
 		
 		markedHandlers = Sets.newHashSet();
-		orderedMarkedHandlers = TreeMultimap.create(Ordering.natural(), Ordering.allEqual());
+		orderedMarkedHandlers = TreeMultimap.create(Ordering.natural(), Ordering.arbitrary());
 	}
 	
 	public void onConnect(ProxiedPlayer player) {

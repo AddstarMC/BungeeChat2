@@ -281,6 +281,20 @@ class TabHandler extends TabListAdapter {
 	}
 	
 	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof TabHandler)) {
+			return false;
+		}
+		
+		return getPlayer().equals(((TabHandler)obj).getPlayer());
+	}
+	
+	@Override
+	public int hashCode() {
+		return getPlayer().hashCode();
+	}
+	
+	@Override
 	public String toString() {
 		return "TabHandler: " + getPlayer().getName();
 	}
