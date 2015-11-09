@@ -7,6 +7,8 @@ import java.util.Set;
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
 
+import au.com.addstar.bchat.packets.SubscriberChangePacket;
+import au.com.addstar.bchat.packets.SubscriberChangePacket.Type;
 import net.cubespace.geSuit.core.GlobalPlayer;
 import net.cubespace.geSuit.core.storage.Storable;
 
@@ -44,8 +46,28 @@ public class ChatChannel implements Storable {
 		listenPermission = permission;
 	}
 	
+	Set<GlobalPlayer> getSubscribers0() {
+		return subscribers;
+	}
+	
 	public Set<GlobalPlayer> getSubscribers() {
 		return Collections.unmodifiableSet(subscribers);
+	}
+	
+	public void addSubscriber(GlobalPlayer player) {
+		synchronized (subscribers) {
+			if (subscribers.add(player)) {
+				manager.getBackendChannel().broadcast(new SubscriberChangePacket(this, Type.Add, player.getUniqueId()));
+			}
+		}
+	}
+	
+	public void removeSubscriber(GlobalPlayer player) {
+		synchronized (subscribers) {
+			if (subscribers.remove(player)) {
+				manager.getBackendChannel().broadcast(new SubscriberChangePacket(this, Type.Remove, player.getUniqueId()));
+			}
+		}
 	}
 	
 	public ChannelScope getScope() {

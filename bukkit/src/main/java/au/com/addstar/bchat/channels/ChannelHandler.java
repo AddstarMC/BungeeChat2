@@ -229,13 +229,6 @@ public class ChannelHandler {
 	}
 	
 	private boolean canSee(CommandSender sender, ChatChannel channel, World sourceWorld) {
-		// Check listen permission
-		if (channel.getListenPermission().isPresent()) {
-			if (!sender.hasPermission(channel.getListenPermission().get())) {
-				return false;
-			}
-		}
-		
 		if (sender instanceof Player) {
 			Player player = (Player)sender;
 			// Check world scope
@@ -251,6 +244,19 @@ public class ChannelHandler {
 				if (!dm.isParticipant(player.getUniqueId())) {
 					return false;
 				}
+			}
+			
+			GlobalPlayer gplayer = Global.getPlayer(player.getUniqueId());
+			if (channel.getSubscribers().contains(gplayer)) {
+				// Listen permission is irrelevant
+				return true;
+			}
+		}
+		
+		// Check listen permission
+		if (channel.getListenPermission().isPresent()) {
+			if (!sender.hasPermission(channel.getListenPermission().get())) {
+				return false;
 			}
 		}
 		

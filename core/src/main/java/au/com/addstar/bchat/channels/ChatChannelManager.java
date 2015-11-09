@@ -15,6 +15,7 @@ import au.com.addstar.bchat.Debugger;
 import au.com.addstar.bchat.packets.BasePacket;
 import au.com.addstar.bchat.packets.ReloadPacket;
 import au.com.addstar.bchat.packets.ReloadPacket.ReloadType;
+import au.com.addstar.bchat.packets.SubscriberChangePacket;
 import net.cubespace.geSuit.core.Global;
 import net.cubespace.geSuit.core.GlobalPlayer;
 import net.cubespace.geSuit.core.GlobalServer;
@@ -506,6 +507,41 @@ public class ChatChannelManager {
 		synchronized (dmChannels) {
 			Map<Tuple<GlobalPlayer, GlobalPlayer>, DMChatChannel> channels = Maps.filterKeys(dmChannels, (k) -> k.getA() == player || k.getB() == player);
 			channels.clear();
+		}
+	}
+	
+	Channel<BasePacket> getBackendChannel() {
+		return channel;
+	}
+	
+	void onSubscriberChange(SubscriberChangePacket packet) {
+		ChatChannel channel = getChannel(packet.channelId);
+		if (channel == null) {
+			Debugger.getLogger(Debugger.Packet).warning("Invalid channel " + packet.channelId + " for subscribe");
+			return;
+		}
+		
+		synchronized (channel.getSubscribers0()) {
+			switch (packet.type) {
+			case Remove:
+				for (UUID id : packet.ids) {
+					GlobalPlayer player = Global.getPlayer(id);
+					if (player != null) {
+						channel.getSubscribers0().remove(player);
+					}
+				}
+				break;
+			case Reset:
+				channel.getSubscribers0().clear();
+			case Add:
+				for (UUID id : packet.ids) {
+					GlobalPlayer player = Global.getPlayer(id);
+					if (player != null) {
+						channel.getSubscribers0().add(player);
+					}
+				}
+				break;
+			}
 		}
 	}
 }

@@ -4,6 +4,7 @@ import java.util.concurrent.ExecutorService;
 
 import au.com.addstar.bchat.packets.BasePacket;
 import au.com.addstar.bchat.packets.ReloadPacket;
+import au.com.addstar.bchat.packets.SubscriberChangePacket;
 import au.com.addstar.bchat.packets.ReloadPacket.ReloadType;
 import net.cubespace.geSuit.core.channel.Channel;
 import net.cubespace.geSuit.core.channel.ChannelDataReceiver;
@@ -27,6 +28,11 @@ public class ChannelManagerListener implements ChannelDataReceiver<BasePacket> {
 					manager.load();
 				});
 			}
+		} else if (packet instanceof SubscriberChangePacket) {
+			SubscriberChangePacket subscriberPacket = (SubscriberChangePacket)packet;
+			service.submit(() -> {
+				manager.onSubscriberChange(subscriberPacket);
+			});
 		}
 	}
 }

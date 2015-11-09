@@ -21,6 +21,7 @@ public final class PacketManager {
 		registerPacket(2, SendPacket.class);
 		registerPacket(3, RefreshPacket.class);
 		registerPacket(4, PostFormatBroadcastPacket.class);
+		registerPacket(5, SubscriberChangePacket.class);
 	}
 	
 	public void registerPacket(int id, Class<? extends BasePacket> packetType) {
