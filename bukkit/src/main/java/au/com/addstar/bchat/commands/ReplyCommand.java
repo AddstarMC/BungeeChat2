@@ -1,15 +1,11 @@
 package au.com.addstar.bchat.commands;
 
-import java.util.List;
-
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-
-import com.google.common.collect.Lists;
 
 import au.com.addstar.bchat.ChatColorizer;
 import au.com.addstar.bchat.attachments.StateAttachment;
@@ -18,14 +14,12 @@ import au.com.addstar.bchat.channels.ChatChannelManager;
 import au.com.addstar.bchat.channels.DMChatChannel;
 import net.cubespace.geSuit.core.Global;
 import net.cubespace.geSuit.core.GlobalPlayer;
-import net.cubespace.geSuit.core.util.Utilities;
-import net.md_5.bungee.api.ChatColor;
 
-public class DMCommand implements CommandExecutor, TabCompleter {
+public class ReplyCommand implements CommandExecutor {
 	private final ChatChannelManager manager;
 	private final ChannelHandler handler;
 	
-	public DMCommand(ChatChannelManager manager, ChannelHandler handler) {
+	public ReplyCommand(ChatChannelManager manager, ChannelHandler handler) {
 		this.manager = manager;
 		this.handler = handler;
 	}
@@ -33,24 +27,31 @@ public class DMCommand implements CommandExecutor, TabCompleter {
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 		if (!(sender instanceof Player)) {
-			sender.sendMessage(ChatColor.RED + "Sorry, only players can direct message");
+			sender.sendMessage(ChatColor.RED + "Only players can use this");
 			return true;
 		}
 		
-		if (args.length < 2) {
+		if (args.length < 1) {
 			return false;
 		}
 		
 		GlobalPlayer source = Global.getPlayer(((Player)sender).getUniqueId());
-		GlobalPlayer target;
+		GlobalPlayer target = null;
 		
-		target = Global.getPlayer(args[0]);
+		// Find reply target
+		StateAttachment attachment = source.getAttachment(StateAttachment.class);
+		if (attachment != null) {
+			if (attachment.getReplyTo() != null) {
+				target = Global.getPlayer(attachment.getReplyTo());
+			}
+		}
+		
 		if (target == null) {
-			sender.sendMessage(ChatColor.RED + "Unknown player " + args[0]);
+			sender.sendMessage(ChatColor.RED + "You have nobody to reply to");
 			return true;
 		}
 		
-		String message = StringUtils.join(args, ' ', 1, args.length);
+		String message = StringUtils.join(args, ' ');
 		message = ChatColorizer.colorizeWithPermission(message, sender);
 		
 		if (ChatColor.stripColor(message).trim().isEmpty()) {
@@ -58,19 +59,10 @@ public class DMCommand implements CommandExecutor, TabCompleter {
 			return true;
 		}
 		
-		// TODO: Check message toggle
 		DMChatChannel channel = manager.getDMChannel(source, target);
 		handler.sendFormat(message, channel, sender);
 		
 		// Update reply targets
-		StateAttachment attachment = source.getAttachment(StateAttachment.class);
-		if (attachment == null) {
-			attachment = new StateAttachment();
-			source.addAttachment(attachment);
-		}
-		
-		attachment.setReplyTo(target.getUniqueId());
-		
 		attachment = target.getAttachment(StateAttachment.class);
 		if (attachment == null) {
 			attachment = new StateAttachment();
@@ -79,16 +71,7 @@ public class DMCommand implements CommandExecutor, TabCompleter {
 		
 		attachment.setReplyTo(source.getUniqueId());
 		
-		source.saveIfModified();
 		target.saveIfModified();
 		return true;
-	}
-	
-	@Override
-	public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-		if (args.length == 1) {
-			return Lists.newArrayList(Utilities.matchPlayerNames(args[0], true));
-		}
-		return null;
 	}
 }

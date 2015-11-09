@@ -2,6 +2,7 @@ package au.com.addstar.bchat.attachments;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 import au.com.addstar.bchat.groups.Group;
 import net.cubespace.geSuit.core.attachments.Attachment;
@@ -10,6 +11,8 @@ public class StateAttachment extends Attachment {
 	private String groupName;
 	private String worldName;
 	private String serverName;
+	
+	private UUID replyTarget;
 	
 	public void setGroup(Group group) {
 		if (group != null && group.getName().equals(groupName)) {
@@ -46,6 +49,17 @@ public class StateAttachment extends Attachment {
 		return serverName;
 	}
 	
+	public void setReplyTo(UUID id) {
+		if (!Objects.equals(replyTarget, id)) {
+			replyTarget = id;
+			setDirty();
+		}
+	}
+	
+	public UUID getReplyTo() {
+		return replyTarget;
+	}
+	
 	@Override
 	public void save(Map<String, String> values) {
 		if (groupName != null) {
@@ -59,6 +73,10 @@ public class StateAttachment extends Attachment {
 		if (serverName != null) {
 			values.put("server", serverName);
 		}
+		
+		if (replyTarget != null) {
+			values.put("reply", replyTarget.toString());
+		}
 	}
 
 	@Override
@@ -66,6 +84,11 @@ public class StateAttachment extends Attachment {
 		groupName = values.get("group");
 		worldName = values.get("world");
 		serverName = values.get("server");
+		if (values.containsKey("reply")) {
+			replyTarget = UUID.fromString(values.get("reply"));
+		} else {
+			replyTarget = null;
+		}
 	}
 
 	@Override

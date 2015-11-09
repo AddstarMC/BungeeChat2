@@ -38,6 +38,8 @@ permission:
       bungeechat.format.magic: true
   bungeechat.command.dm:
     default: true
+  bungeechat.command.reply:
+    default: true
 commands:
   runchat:
     usage: /<command> <channel> <message>
@@ -54,3 +56,7 @@ commands:
     usage: /<command> <player> <message>
     aliases: [msg,tell,whisper,m,w,t]
     permission: bungeechat.command.dm
+  reply:
+    usage: /<command> <message>
+    aliases: [r]
+    permission: bungeechat.command.reply
