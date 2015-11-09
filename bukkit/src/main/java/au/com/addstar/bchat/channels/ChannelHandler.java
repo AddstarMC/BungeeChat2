@@ -9,6 +9,7 @@ import au.com.addstar.bchat.ChatFormatter;
 import au.com.addstar.bchat.Debugger;
 import au.com.addstar.bchat.packets.BasePacket;
 import au.com.addstar.bchat.packets.BroadcastPacket;
+import au.com.addstar.bchat.packets.PostFormatBroadcastPacket;
 import net.cubespace.geSuit.core.Global;
 import net.cubespace.geSuit.core.GlobalPlayer;
 import net.cubespace.geSuit.core.channel.Channel;
@@ -113,6 +114,18 @@ public class ChannelHandler {
 	public void sendFormat(String message, FormattedChatChannel channel, CommandSender sender) {
 		String format = channel.getFormat();
 		
+		// TODO: source world handling
+		// Handle post formatting channels differently
+		if (channel instanceof PostFormattedChatChannel) {
+			if (sender instanceof Player) {
+				GlobalPlayer player = Global.getPlayer(((Player)sender).getUniqueId());
+				sendPostFormatted(message, (PostFormattedChatChannel)channel, player);
+			} else {
+				throw new UnsupportedOperationException();
+			}
+			return;
+		}
+		
 		if (sender instanceof Player) {
 			GlobalPlayer player = Global.getPlayer(((Player)sender).getUniqueId());
 			if (channel instanceof TemporaryChatChannel) {
@@ -127,8 +140,18 @@ public class ChannelHandler {
 				message = formatter.formatConsole(message, format, sender.getName());
 			}
 		}
-		// TODO: Handle formatting DM channels
+
 		send(message, channel);
+	}
+	
+	private void sendPostFormatted(String message, PostFormattedChatChannel channel, GlobalPlayer sender) {
+		// Handle it locally
+		broadcastLocalFormat(message, sender, channel, null);
+		
+		// Broadcast if needed
+		if (channel.getScope() == ChannelScope.GLOBAL) {
+			pipe.broadcast(new PostFormatBroadcastPacket(channel, message, sender, false));
+		}
 	}
 	
 	void handleIncomming(BroadcastPacket packet) {
@@ -145,22 +168,80 @@ public class ChannelHandler {
 		broadcastLocal(packet.message, channel, null);
 	}
 	
+	void handleIncomming(PostFormatBroadcastPacket packet) {
+		if (packet.isHighlightChannel) {
+			return; // TODO: Keyword highlighting
+		}
+		
+		ChatChannel channel = manager.getChannel(packet.channelId);
+		if (channel == null) {
+			Debugger.getLogger(Debugger.Packet).warning("Invalid channel " + packet.channelId + " in packet");
+			return;
+		}
+		
+		if (!(channel instanceof PostFormattedChatChannel)) {
+			Debugger.getLogger(Debugger.Packet).warning("Invalid packet used for channel broadcast. Channel not post format channel: " + packet.channelId);
+			return;
+		}
+		
+		GlobalPlayer sender = Global.getPlayer(packet.sender);
+		if (sender == null) {
+			Debugger.getLogger(Debugger.Packet).warning("Sender was not valid for packet " + packet.channelId + ": " + packet.sender);
+			return;
+		}
+		
+		broadcastLocalFormat(packet.message, sender, (PostFormattedChatChannel)channel, null);
+	}
+	
 	/*
 	 * Broadcast a message to all players that are allowed to hear it
 	 */
 	private void broadcastLocal(BaseComponent[] message, ChatChannel channel, World sourceWorld) {
 		for (Player player : Bukkit.getOnlinePlayers()) {
+			if (!canSee(player, channel, sourceWorld)) {
+				continue;
+			}
+			
+			player.spigot().sendMessage(message);
+		}
+	}
+	
+	/*
+	 * Broadcast a message to all players that are allowed to hear it while formatting
+	 */
+	private void broadcastLocalFormat(String message, GlobalPlayer sender, PostFormattedChatChannel channel, World sourceWorld) {
+		for (Player player : Bukkit.getOnlinePlayers()) {
+			if (!canSee(player, channel, sourceWorld)) {
+				continue;
+			}
+			
+			// Format this message specifically for this player
+			GlobalPlayer listener = Global.getPlayer(player.getUniqueId());
+			String format = channel.getFormat(sender, listener);
+			if (channel instanceof DMChatChannel) {
+				format = formatter.formatDM(message, format, sender, ((DMChatChannel)channel).getTarget(sender));
+			} else {
+				format = formatter.format(message, format, sender);
+			}
+			
+			player.sendMessage(format);
+		}
+	}
+	
+	private boolean canSee(CommandSender sender, ChatChannel channel, World sourceWorld) {
+		// Check listen permission
+		if (channel.getListenPermission().isPresent()) {
+			if (!sender.hasPermission(channel.getListenPermission().get())) {
+				return false;
+			}
+		}
+		
+		if (sender instanceof Player) {
+			Player player = (Player)sender;
 			// Check world scope
 			if (channel.getScope() == ChannelScope.WORLD && sourceWorld != null) {
 				if (player.getWorld() != sourceWorld) {
-					continue;
-				}
-			}
-			
-			// Check listen permission
-			if (channel.getListenPermission().isPresent()) {
-				if (!player.hasPermission(channel.getListenPermission().get())) {
-					continue;
+					return false;
 				}
 			}
 			
@@ -168,12 +249,12 @@ public class ChannelHandler {
 			if (channel instanceof DMChatChannel) {
 				DMChatChannel dm = (DMChatChannel)channel;
 				if (!dm.isParticipant(player.getUniqueId())) {
-					continue;
+					return false;
 				}
 			}
-			
-			player.spigot().sendMessage(message);
 		}
+		
+		return true;
 	}
 	
 	public ChatFormatter getFormatter() {

@@ -3,7 +3,6 @@ package au.com.addstar.bchat;
 import com.google.common.base.Strings;
 
 import au.com.addstar.bchat.attachments.StateAttachment;
-import au.com.addstar.bchat.channels.DMChatChannel;
 import au.com.addstar.bchat.channels.TemporaryChatChannel;
 import au.com.addstar.bchat.groups.Group;
 import au.com.addstar.bchat.groups.GroupManager;
@@ -105,20 +104,12 @@ public class ChatFormatter {
 	/**
 	 * Formats a DM message
 	 * @param message The message to send
+	 * @param format The format string
 	 * @param sender The sender of the dm
-	 * @param listener The player that will be receiving this (for name replacement). Can be null
-	 * @param channel The dm channel
+	 * @param target The target of the dm
 	 * @return The formatted string
 	 */
-	public String formatDM(String message, GlobalPlayer sender, GlobalPlayer listener, DMChatChannel channel) {
-		GlobalPlayer target;
-		
-		if (channel.getEnd1().equals(sender)) {
-			target = channel.getEnd2();
-		} else {
-			target = channel.getEnd1();
-		}
-		
+	public String formatDM(String message, String format, GlobalPlayer sender, GlobalPlayer target) {
 		// Get the senders state
 		StateAttachment senderState = sender.getAttachment(StateAttachment.class);
 		if (senderState == null) {
@@ -126,7 +117,6 @@ public class ChatFormatter {
 		}
 		
 		// Do sender group formatting
-		String formatted = channel.getFormat();
 		Group senderGroup = null;
 		if (senderState.getGroupName() != null) {
 			senderGroup = groupManager.getGroup(senderState.getGroupName());
@@ -137,11 +127,7 @@ public class ChatFormatter {
 		}
 		
 		// Replace the sender tags
-		if (channel.shouldReplaceSelf() && sender.equals(listener)) {
-			formatted = formatWithGroup(formatted, senderGroup, channel.getReplaceWord(), channel.getReplaceWord(), false);
-		} else {
-			formatted = formatWithGroup(formatted, senderGroup, sender.getDisplayName(), sender.getName(), false);
-		}
+		format = formatWithGroup(format, senderGroup, sender.getDisplayName(), sender.getName(), false);
 		
 		// Get the targets state
 		StateAttachment targetState = target.getAttachment(StateAttachment.class);
@@ -160,17 +146,13 @@ public class ChatFormatter {
 		}
 		
 		// Replace the target tags
-		if (channel.shouldReplaceSelf() && target.equals(listener)) {
-			formatted = formatWithGroup(formatted, targetGroup, channel.getReplaceWord(), channel.getReplaceWord(), true);
-		} else {
-			formatted = formatWithGroup(formatted, targetGroup, target.getDisplayName(), target.getName(), true);
-		}
+		format = formatWithGroup(format, targetGroup, target.getDisplayName(), target.getName(), true);
 		
 		// rest of the formatting
-		formatted = formatted.replace("{SERVER}", Strings.nullToEmpty(senderState.getServer()));
-		formatted = formatted.replace("{WORLD}", Strings.nullToEmpty(senderState.getWorld()));
-		formatted = formatted.replace("{MESSAGE}", message);
+		format = format.replace("{SERVER}", Strings.nullToEmpty(senderState.getServer()));
+		format = format.replace("{WORLD}", Strings.nullToEmpty(senderState.getWorld()));
+		format = format.replace("{MESSAGE}", message);
 		
-		return formatted;
+		return format;
 	}
 }

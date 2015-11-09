@@ -20,6 +20,7 @@ public final class PacketManager {
 		registerPacket(1, BroadcastPacket.class);
 		registerPacket(2, SendPacket.class);
 		registerPacket(3, RefreshPacket.class);
+		registerPacket(4, PostFormatBroadcastPacket.class);
 	}
 	
 	public void registerPacket(int id, Class<? extends BasePacket> packetType) {

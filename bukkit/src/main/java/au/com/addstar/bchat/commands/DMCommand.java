@@ -59,7 +59,7 @@ public class DMCommand implements CommandExecutor, TabCompleter {
 		
 		// TODO: Check message toggle
 		DMChatChannel channel = manager.getDMChannel(source, target);
-		handler.send(message, channel);
+		handler.sendFormat(message, channel, sender);
 		
 		// TODO: Update reply target
 		

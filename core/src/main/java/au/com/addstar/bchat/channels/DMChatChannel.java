@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import net.cubespace.geSuit.core.GlobalPlayer;
 
-public class DMChatChannel extends FormattedChatChannel {
+public class DMChatChannel extends PostFormattedChatChannel {
 	private boolean replaceSelf;
 	private String replaceWord;
 	
@@ -12,7 +12,7 @@ public class DMChatChannel extends FormattedChatChannel {
 	private final GlobalPlayer end2;
 	
 	DMChatChannel(GlobalPlayer end1, GlobalPlayer end2, DMChannelTemplate template, ChatChannelManager manager) {
-		super("@" + end1.getName() + "-" + end2.getName(), manager);
+		super("@" + end1.getUniqueId().toString() + ":" + end2.getUniqueId().toString(), manager);
 		
 		this.end1 = end1;
 		this.end2 = end2;
@@ -52,5 +52,42 @@ public class DMChatChannel extends FormattedChatChannel {
 	
 	public boolean isParticipant(UUID id) {
 		return id.equals(end1.getUniqueId()) || id.equals(end2.getUniqueId());
+	}
+	
+	/**
+	 * Gets the target player if {@code sender} is the sending player.
+	 * @param sender The sender of the message. This should be either {@link #getEnd1()} or {@link #getEnd2()}
+	 * @return The target player
+	 */
+	public GlobalPlayer getTarget(GlobalPlayer sender) {
+		if (end1.equals(sender)) {
+			return end2;
+		} else {
+			return end1;
+		}
+	}
+	
+	@Override
+	public String getFormat(GlobalPlayer sender, GlobalPlayer listener) {
+		if (!replaceSelf) {
+			return getFormat();
+		}
+		
+		GlobalPlayer target = getTarget(sender);
+		
+		String format = getFormat();
+		if (sender.equals(listener)) {
+			format = format.replace("{DISPLAYNAME}", replaceWord);
+			format = format.replace("{RAWDISPLAYNAME}", replaceWord);
+			format = format.replace("{NAME}", replaceWord);
+			format = format.replace("{RAWNAME}", replaceWord);
+		} else if (target.equals(listener)) {
+			format = format.replace("{TDISPLAYNAME}", replaceWord);
+			format = format.replace("{TRAWDISPLAYNAME}", replaceWord);
+			format = format.replace("{TNAME}", replaceWord);
+			format = format.replace("{TRAWNAME}", replaceWord);
+		}
+		
+		return format;
 	}
 }

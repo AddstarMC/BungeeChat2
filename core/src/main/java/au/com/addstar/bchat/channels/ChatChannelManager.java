@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 import com.google.common.base.Preconditions;
@@ -14,6 +15,7 @@ import au.com.addstar.bchat.Debugger;
 import au.com.addstar.bchat.packets.BasePacket;
 import au.com.addstar.bchat.packets.ReloadPacket;
 import au.com.addstar.bchat.packets.ReloadPacket.ReloadType;
+import net.cubespace.geSuit.core.Global;
 import net.cubespace.geSuit.core.GlobalPlayer;
 import net.cubespace.geSuit.core.GlobalServer;
 import net.cubespace.geSuit.core.channel.Channel;
@@ -23,7 +25,7 @@ import net.cubespace.geSuit.core.storage.StorageSection;
 
 public class ChatChannelManager {
 	public static final String DefaultChannel = "";
-	private static final String Global = "#global";
+	private static final String GlobalDef = "#global";
 	
 	private final StorageInterface backend;
 	private final Channel<BasePacket> channel;
@@ -221,9 +223,9 @@ public class ChatChannelManager {
 					defaultChannelMap.put(serverName, map);
 				}
 				
-				if (serverName.equals(Global)) {
+				if (serverName.equals(GlobalDef)) {
 					// Special global def
-					map.put(Global, section.getString(Global, ""));
+					map.put(GlobalDef, section.getString(GlobalDef, ""));
 				} else {
 					// Normal server def
 					map.clear();
@@ -246,8 +248,8 @@ public class ChatChannelManager {
 			
 			StorageSection section = backend.getSubsection("default");
 			for (String server : defaultChannelMap.keySet()) {
-				if (server.equals(Global)) {
-					section.set(Global, defaultChannelMap.get(server).getOrDefault(Global, ""));
+				if (server.equals(GlobalDef)) {
+					section.set(GlobalDef, defaultChannelMap.get(server).getOrDefault(GlobalDef, ""));
 				} else {
 					section.set(server, defaultChannelMap.get(server));
 				}
@@ -333,6 +335,22 @@ public class ChatChannelManager {
 	}
 	
 	public ChatChannel getChannel(String name) {
+		if (name.startsWith("@")) {
+			// DM Channel
+			name = name.substring(1);
+			String[] ids = name.split(":");
+			UUID end1 = UUID.fromString(ids[0]);
+			UUID end2 = UUID.fromString(ids[1]);
+			GlobalPlayer player1 = Global.getPlayer(end1);
+			GlobalPlayer player2 = Global.getPlayer(end2);
+			
+			if (player1 == null || player2 == null) {
+				return null;
+			}
+			
+			return getDMChannel(player1, player2);
+		}
+		
 		return channelMap.get(name);
 	}
 	
@@ -366,12 +384,12 @@ public class ChatChannelManager {
 	public ChatChannel getDefaultChannel(GlobalServer server) {
 		Map<String, String> map = defaultChannelMap.get(server.getName());
 		if (map == null) {
-			map = defaultChannelMap.getOrDefault(Global, Collections.emptyMap());
+			map = defaultChannelMap.getOrDefault(GlobalDef, Collections.emptyMap());
 		}
 		
 		ChatChannel channel = null;
-		if (map.containsKey(Global)) {
-			String channelName = map.get(Global);
+		if (map.containsKey(GlobalDef)) {
+			String channelName = map.get(GlobalDef);
 			channel = channelMap.get(channelName);
 		}
 		
@@ -391,15 +409,15 @@ public class ChatChannelManager {
 	public ChatChannel getDefaultChannel(GlobalServer server, String world) {
 		Map<String, String> map = defaultChannelMap.get(server.getName());
 		if (map == null) {
-			map = defaultChannelMap.getOrDefault(Global, Collections.emptyMap());
+			map = defaultChannelMap.getOrDefault(GlobalDef, Collections.emptyMap());
 		}
 		
 		ChatChannel channel = null;
 		if (map.containsKey(world)) {
 			String channelName = map.get(world);
 			channel = channelMap.get(channelName);
-		} else if (map.containsKey(Global)) {
-			String channelName = map.get(Global);
+		} else if (map.containsKey(GlobalDef)) {
+			String channelName = map.get(GlobalDef);
 			channel = channelMap.get(channelName);
 		}
 		
@@ -426,8 +444,8 @@ public class ChatChannelManager {
 	 * @param channel The channel to default to
 	 */
 	public void setDefaultChannel(String server, ChatChannel channel) {
-		Preconditions.checkArgument(!server.equals(Global));
-		setDefaultChannel0(server, Global, channel);
+		Preconditions.checkArgument(!server.equals(GlobalDef));
+		setDefaultChannel0(server, GlobalDef, channel);
 	}
 	
 	/**
@@ -437,8 +455,8 @@ public class ChatChannelManager {
 	 * @param channel The channel to default to
 	 */
 	public void setDefaultChannel(String server, String world, ChatChannel channel) {
-		Preconditions.checkArgument(!server.equals(Global));
-		Preconditions.checkArgument(!world.equals(Global));
+		Preconditions.checkArgument(!server.equals(GlobalDef));
+		Preconditions.checkArgument(!world.equals(GlobalDef));
 		setDefaultChannel0(server, world, channel);
 	}
 	
@@ -447,7 +465,7 @@ public class ChatChannelManager {
 	 * @param channel The channel to default to
 	 */
 	public void setDefaultChannel(ChatChannel channel) {
-		setDefaultChannel0(Global, Global, channel);
+		setDefaultChannel0(GlobalDef, GlobalDef, channel);
 	}
 	
 	/**

@@ -2,6 +2,7 @@ package au.com.addstar.bchat.channels;
 
 import au.com.addstar.bchat.packets.BasePacket;
 import au.com.addstar.bchat.packets.BroadcastPacket;
+import au.com.addstar.bchat.packets.PostFormatBroadcastPacket;
 import au.com.addstar.bchat.packets.SendPacket;
 import net.cubespace.geSuit.core.channel.Channel;
 import net.cubespace.geSuit.core.channel.ChannelDataReceiver;
@@ -17,6 +18,8 @@ public class ChannelPacketListener implements ChannelDataReceiver<BasePacket> {
 	public void onDataReceive(Channel<BasePacket> channel, BasePacket packet, int sourceId, boolean isBroadcast) {
 		if (packet instanceof BroadcastPacket) {
 			handleBroadcast((BroadcastPacket)packet);
+		} else if (packet instanceof PostFormatBroadcastPacket) {
+			handler.handleIncomming((PostFormatBroadcastPacket)packet);
 		} else if (packet instanceof SendPacket) {
 			handleSend((SendPacket)packet);
 		}
