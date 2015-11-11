@@ -14,6 +14,7 @@ public class TemporaryChatChannel extends FormattedChatChannel {
 		
 		this.name = name;
 		setTemplate(template);
+		setAllowSubcriptions(true);
 	}
 	
 	TemporaryChatChannel(String fullName, ChatChannelManager manager) {

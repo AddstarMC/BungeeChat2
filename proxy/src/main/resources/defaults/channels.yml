@@ -40,8 +40,10 @@ dm:
 # Here you define channels. Each channel should be given a name and a listenPermission
 # <name>:
 #   listenPermission: '<permission>' # optional
+#   canJoin: <true|false> # optional, false by default
 # 
 # If listenPermission is omitted, then anyone will be able to listen to this channel
+# canJoin, when true, allows players to subscribe to the channel.
 #
 # channels can also be given a command(s) and permission for that command so players can
 # talk in them.

@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import au.com.addstar.bchat.channels.ChatChannel;
 import au.com.addstar.bchat.channels.ChatChannelManager;
 import au.com.addstar.bchat.channels.ChatChannelTemplate;
+import au.com.addstar.bchat.channels.TemporaryChatChannel;
 import net.cubespace.geSuit.core.Global;
 import net.cubespace.geSuit.core.GlobalPlayer;
 import net.md_5.bungee.api.ChatColor;
@@ -117,12 +118,24 @@ public class ChannelCommand implements TabExecutor {
 				sender.sendMessage(ChatColor.RED + "Unknown sub channel " + args[start+1]);
 				return;
 			}
+			
+			if (template.getJoinPermission().isPresent()) {
+				if (!sender.hasPermission(template.getJoinPermission().get())) {
+					sender.sendMessage(ChatColor.RED + "You do not have permission to join this channel");
+					return;
+				}
+			}
 		} else {
 			channel = manager.getChannel(args[start]);
 			if (channel == null) {
 				sender.sendMessage(ChatColor.RED + "Unknown channel " + args[start]);
 				return;
 			}
+		}
+		
+		if (!channel.allowSubscriptions()) {
+			sender.sendMessage(ChatColor.RED + "This channel does not allow subscriptions");
+			return;
 		}
 		
 		// Do the subscription

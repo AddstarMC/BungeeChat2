@@ -140,6 +140,7 @@ public class ChannelConfigLoader {
 		}
 
 		channel.setListenPermission(listenPermission);
+		channel.setAllowSubcriptions(section.getBoolean("canJoin", false));
 	}
 
 	private void loadTemplates(Configuration config) {

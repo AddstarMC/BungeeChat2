@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 
 import au.com.addstar.bchat.packets.SubscriberChangePacket;
@@ -18,6 +19,7 @@ public class ChatChannel implements Storable {
 	
 	private Optional<String> listenPermission;
 	private ChannelScope scope;
+	private boolean allowSubscriptions;
 	
 	protected final ChatChannelManager manager;
 	
@@ -46,6 +48,14 @@ public class ChatChannel implements Storable {
 		listenPermission = permission;
 	}
 	
+	public boolean allowSubscriptions() {
+		return allowSubscriptions;
+	}
+	
+	public void setAllowSubcriptions(boolean allowSubscriptions) {
+		this.allowSubscriptions = allowSubscriptions;
+	}
+	
 	Set<GlobalPlayer> getSubscribers0() {
 		return subscribers;
 	}
@@ -55,6 +65,7 @@ public class ChatChannel implements Storable {
 	}
 	
 	public void addSubscriber(GlobalPlayer player) {
+		Preconditions.checkState(allowSubscriptions, "Subscriptions to this channel are not permitted");
 		synchronized (subscribers) {
 			if (subscribers.add(player)) {
 				manager.getBackendChannel().broadcast(new SubscriberChangePacket(this, Type.Add, player.getUniqueId()));
@@ -88,6 +99,7 @@ public class ChatChannel implements Storable {
 		}
 		
 		values.put("scope", scope.name());
+		values.put("subscribe", String.valueOf(allowSubscriptions));
 		values.put("type", "plain");
 	}
 	
@@ -100,5 +112,6 @@ public class ChatChannel implements Storable {
 		}
 		
 		scope = ChannelScope.valueOf(values.get("scope"));
+		allowSubscriptions = Boolean.valueOf(values.get("subscribe"));
 	}
 }
