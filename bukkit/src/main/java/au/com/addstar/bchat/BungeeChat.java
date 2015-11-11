@@ -16,6 +16,7 @@ import au.com.addstar.bchat.channels.ChannelManagerListener;
 import au.com.addstar.bchat.channels.ChatChannelManager;
 import au.com.addstar.bchat.channels.ChannelPacketListener;
 import au.com.addstar.bchat.commands.BungeeChatCommand;
+import au.com.addstar.bchat.commands.ChannelCommand;
 import au.com.addstar.bchat.commands.DMCommand;
 import au.com.addstar.bchat.commands.ReplyCommand;
 import au.com.addstar.bchat.groups.GroupManager;
@@ -93,6 +94,7 @@ public class BungeeChat extends JavaPlugin {
 		registerCommand(getCommand("bungeechat"), new BungeeChatCommand());
 		registerCommand(getCommand("dm"), new DMCommand(channelManager, handler));
 		registerCommand(getCommand("reply"), new ReplyCommand(channelManager, handler));
+		registerCommand(getCommand("channel"), new ChannelCommand(channelManager));
 	}
 	
 	private void registerCommand(PluginCommand command, CommandExecutor executor) {

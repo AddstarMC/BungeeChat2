@@ -40,6 +40,12 @@ permission:
     default: true
   bungeechat.command.reply:
     default: true
+  bungeechat.command.channel:
+    default: op
+  bungeechat.command.channel.subscribe:
+    default: op
+  bungeechat.command.channel.subscribe.other:
+    default: op
 commands:
   runchat:
     usage: /<command> <channel> <message>
@@ -60,3 +66,5 @@ commands:
     usage: /<command> <message>
     aliases: [r]
     permission: bungeechat.command.reply
+  channel:
+    permission: bungeechat.command.channel

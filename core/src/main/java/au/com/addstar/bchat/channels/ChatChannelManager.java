@@ -160,9 +160,14 @@ public class ChatChannelManager {
 			// Load channels
 			for (String templateName : templateList) {
 				ChatChannelTemplate template;
-				String type = templateSection.getMapPartial(templateName, "type").get("type");
-				if (type != null) {
-					template = new DMChannelTemplate(templateName);
+				Map<String, String> typeMap = templateSection.getMapPartial(templateName, "type");
+				if (typeMap != null) {
+					String type = typeMap.get("type");
+					if ("dm".equals(type)) {
+						template = new DMChannelTemplate(templateName);
+					} else {
+						template = new ChatChannelTemplate(templateName);
+					}
 				} else {
 					template = new ChatChannelTemplate(templateName);
 				}
@@ -173,9 +178,11 @@ public class ChatChannelManager {
 				debug.fine("Adding local template " + templateName);
 				
 				// Update all current DMChannels
-				if (templateName.equals(DMChannelTemplate.DMName) && template instanceof DMChannelTemplate) {
-					for (DMChatChannel channel : dmChannels.values()) {
-						channel.setTemplate((DMChannelTemplate)template);
+				synchronized (dmChannels) {
+					if (templateName.equals(DMChannelTemplate.DMName) && template instanceof DMChannelTemplate) {
+						for (DMChatChannel channel : dmChannels.values()) {
+							channel.setTemplate((DMChannelTemplate)template);
+						}
 					}
 				}
 			}
@@ -262,23 +269,31 @@ public class ChatChannelManager {
 	 * Reloads all channels and templates from the backend.
 	 */
 	public void load() {
-		backend.reset();
-		loadTemplates();
-		loadChannels();
-		loadDefaultChannels();
+		try {
+			backend.reset();
+			loadTemplates();
+			loadChannels();
+			loadDefaultChannels();
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**
 	 * Saves any changes to channels / templates (and any additions) to the backend.
 	 */
 	public void save() {
-		saveTemplates();
-		saveChannels();
-		saveDefaultChannels();
-		
-		backend.updateAtomic();
-		channel.broadcast(new ReloadPacket(ReloadType.Channels));
-		Debugger.getLogger(Debugger.Packet).info("Broadcasting reload for channels");
+		try {
+			saveTemplates();
+			saveChannels();
+			saveDefaultChannels();
+			
+			backend.updateAtomic();
+			channel.broadcast(new ReloadPacket(ReloadType.Channels));
+			Debugger.getLogger(Debugger.Packet).info("Broadcasting reload for channels");
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public TemporaryChatChannel createTemporaryChannel(String name, ChatChannelTemplate template) {
@@ -353,6 +368,17 @@ public class ChatChannelManager {
 		}
 		
 		return channelMap.get(name);
+	}
+	
+	public TemporaryChatChannel getChannel(ChatChannelTemplate template, String name) {
+		name = template.getName() + ":" + name;
+		ChatChannel channel = channelMap.get(name);
+		
+		if (channel instanceof TemporaryChatChannel) {
+			return (TemporaryChatChannel)channel;
+		} else {
+			return null;
+		}
 	}
 	
 	public CommandChatChannel getChannelForCommand(String command) {

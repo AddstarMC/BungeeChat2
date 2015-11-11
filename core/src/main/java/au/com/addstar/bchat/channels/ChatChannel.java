@@ -62,10 +62,13 @@ public class ChatChannel implements Storable {
 		}
 	}
 	
-	public void removeSubscriber(GlobalPlayer player) {
+	public boolean removeSubscriber(GlobalPlayer player) {
 		synchronized (subscribers) {
 			if (subscribers.remove(player)) {
 				manager.getBackendChannel().broadcast(new SubscriberChangePacket(this, Type.Remove, player.getUniqueId()));
+				return true;
+			} else {
+				return false;
 			}
 		}
 	}
