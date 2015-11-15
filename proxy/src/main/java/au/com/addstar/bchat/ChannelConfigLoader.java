@@ -43,6 +43,7 @@ public class ChannelConfigLoader {
 
 	private ChatChannel loadDefault(Configuration config) {
 		FormattedChatChannel defaultChannel = manager.createFormattedChannel("");
+		defaultChannel.setUseHighlighter(true);
 
 		String format = config.getString("default.format", "{PREFIX}<{DISPLAYNAME}&f>{SUFFIX}: {MESSAGE}");
 		format = ChatColor.translateAlternateColorCodes('&', format);

@@ -13,6 +13,7 @@ import au.com.addstar.bchat.packets.PostFormatBroadcastPacket;
 import net.cubespace.geSuit.core.Global;
 import net.cubespace.geSuit.core.GlobalPlayer;
 import net.cubespace.geSuit.core.channel.Channel;
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 
@@ -23,11 +24,13 @@ public class ChannelHandler {
 	private final ChatChannelManager manager;
 	private final Channel<BasePacket> pipe;
 	private final ChatFormatter formatter;
+	private final Highlighter highlighter;
 	
-	public ChannelHandler(ChatChannelManager manager, Channel<BasePacket> pipe, ChatFormatter formatter) {
+	public ChannelHandler(ChatChannelManager manager, Channel<BasePacket> pipe, ChatFormatter formatter, Highlighter highlighter) {
 		this.manager = manager;
 		this.pipe = pipe;
 		this.formatter = formatter;
+		this.highlighter = highlighter;
 	}
 	
 	/**
@@ -35,10 +38,12 @@ public class ChannelHandler {
 	 * the channel. This method ignores world scope
 	 * @param message The message to send. No further formatting will be
 	 *                done to this message
+	 * @param highlighted The highlighted version of {@code message}.
+	 *                This may be null if not required
 	 * @param channel The channel to send on
 	 */
-	public void send(BaseComponent[] message, ChatChannel channel) {
-		send(message, channel, null);
+	public void send(BaseComponent[] message, BaseComponent[] highlighted, ChatChannel channel) {
+		send(message, highlighted, channel, null);
 	}
 	
 	/**
@@ -46,10 +51,12 @@ public class ChannelHandler {
 	 * the channel. This method ignores world scope
 	 * @param message The message to send. No further formatting will be
 	 *                done to this message
+	 * @param highlighted This is a highlighted version of {@code message}.
+	 *                This may be null if not required
 	 * @param channel The channel to send on
 	 */
-	public void send(String message, ChatChannel channel) {
-		send(TextComponent.fromLegacyText(message), channel, null);
+	public void send(String message, String highlighted, ChatChannel channel) {
+		send(TextComponent.fromLegacyText(message), (highlighted != null ? TextComponent.fromLegacyText(highlighted) : null), channel, null);
 	}
 	
 	/**
@@ -57,11 +64,13 @@ public class ChannelHandler {
 	 * the channel. This method ignores scope
 	 * @param message The message to send. No further formatting will be
 	 *                done to this message
+	 * @param highlighted This is a highlighted version of {@code message}.
+	 *                This may be null if not required
 	 * @param channel The channel to send on
 	 * @param sourceWorld The source world for this message
 	 */
-	public void send(String message, ChatChannel channel, World sourceWorld) {
-		send(TextComponent.fromLegacyText(message), channel, sourceWorld);
+	public void send(String message, String highlighted, ChatChannel channel, World sourceWorld) {
+		send(TextComponent.fromLegacyText(message), (highlighted != null ? TextComponent.fromLegacyText(highlighted) : null), channel, sourceWorld);
 	}
 	
 	/**
@@ -69,17 +78,19 @@ public class ChannelHandler {
 	 * the channel. This method obeys world scope
 	 * @param message The message to send. No further formatting will be
 	 *                done to this message
+	 * @param highlighted This is a highlighted version of {@code message}.
+	 *                This may be null if not required
 	 * @param channel The channel to send on
 	 * @param sourceWorld The source world for this message
 	 */
-	public void send(BaseComponent[] message, ChatChannel channel, World sourceWorld) {
+	public void send(BaseComponent[] message, BaseComponent[] highlighted, ChatChannel channel, World sourceWorld) {
 		// TODO: Keyword Highlighting
 		// Handle it locally
-		broadcastLocal(message, channel, sourceWorld);
+		broadcastLocal(message, highlighted, channel, sourceWorld);
 		
 		// Broadcast if needed
 		if (channel.getScope() == ChannelScope.GLOBAL) {
-			pipe.broadcast(new BroadcastPacket(channel, message, false));
+			pipe.broadcast(new BroadcastPacket(channel, message, highlighted));
 		}
 	}
 	
@@ -100,7 +111,7 @@ public class ChannelHandler {
 	 * @param channel The channel to send on
 	 */
 	public void sendRemoteOnly(BaseComponent[] message, ChatChannel channel) {
-		pipe.broadcast(new BroadcastPacket(channel, message, false));
+		pipe.broadcast(new BroadcastPacket(channel, message, null));
 	}
 	
 	/**
@@ -126,22 +137,44 @@ public class ChannelHandler {
 			return;
 		}
 		
+		String formatted = formatMessage(message, format, channel, sender);
+		String highlighted = null;
+		if (channel.getUseHighlighter()) {
+			// Determine the intial color for the message
+			String initialColor;
+			int messagePos = format.indexOf("{MESSAGE}");
+			if (messagePos == -1) {
+				initialColor = ChatColor.RESET.toString();
+			} else {
+				initialColor = org.bukkit.ChatColor.getLastColors(format.substring(0, messagePos));
+				if (initialColor.isEmpty()) {
+					initialColor = ChatColor.RESET.toString();
+				}
+			}
+			
+			String highlightedMessage = highlighter.highlight(message, initialColor);
+			if (highlightedMessage != message) {
+				highlighted = formatMessage(highlightedMessage, format, channel, sender);
+			}
+		}
+		send(formatted, highlighted, channel);
+	}
+	
+	private String formatMessage(String message, String format, ChatChannel channel, CommandSender sender) {
 		if (sender instanceof Player) {
 			GlobalPlayer player = Global.getPlayer(((Player)sender).getUniqueId());
 			if (channel instanceof TemporaryChatChannel) {
-				message = formatter.formatIn(message, format, (TemporaryChatChannel)channel, player);
+				return formatter.formatIn(message, format, (TemporaryChatChannel)channel, player);
 			} else {
-				message = formatter.format(message, format, player);
+				return formatter.format(message, format, player);
 			}
 		} else {
 			if (channel instanceof TemporaryChatChannel) {
-				message = formatter.formatConsoleIn(message, format, (TemporaryChatChannel)channel, sender.getName());
+				return formatter.formatConsoleIn(message, format, (TemporaryChatChannel)channel, sender.getName());
 			} else {
-				message = formatter.formatConsole(message, format, sender.getName());
+				return formatter.formatConsole(message, format, sender.getName());
 			}
 		}
-
-		send(message, channel);
 	}
 	
 	private void sendPostFormatted(String message, PostFormattedChatChannel channel, GlobalPlayer sender) {
@@ -155,17 +188,13 @@ public class ChannelHandler {
 	}
 	
 	void handleIncomming(BroadcastPacket packet) {
-		if (packet.isHighlightChannel) {
-			return; // TODO: Keyword highlighting
-		}
-		
 		ChatChannel channel = manager.getChannel(packet.channelId);
 		if (channel == null) {
 			Debugger.getLogger(Debugger.Packet).warning("Invalid channel " + packet.channelId + " in packet");
 			return;
 		}
 		
-		broadcastLocal(packet.message, channel, null);
+		broadcastLocal(packet.message, packet.highlightedMessage, channel, null);
 	}
 	
 	void handleIncomming(PostFormatBroadcastPacket packet) {
@@ -196,13 +225,17 @@ public class ChannelHandler {
 	/*
 	 * Broadcast a message to all players that are allowed to hear it
 	 */
-	private void broadcastLocal(BaseComponent[] message, ChatChannel channel, World sourceWorld) {
+	private void broadcastLocal(BaseComponent[] message, BaseComponent[] highlighted, ChatChannel channel, World sourceWorld) {
 		for (Player player : Bukkit.getOnlinePlayers()) {
 			if (!canSee(player, channel, sourceWorld)) {
 				continue;
 			}
 			
-			player.spigot().sendMessage(message);
+			if (highlighted != null && player.hasPermission("bungeechat.see.highlighted")) {
+				player.spigot().sendMessage(highlighted);
+			} else {
+				player.spigot().sendMessage(message);
+			}
 		}
 	}
 	

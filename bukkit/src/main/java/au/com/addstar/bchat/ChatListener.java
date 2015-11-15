@@ -64,21 +64,15 @@ public class ChatListener implements Listener {
 	
 	@EventHandler(priority=EventPriority.MONITOR, ignoreCancelled=true)
 	public void onChatPost(AsyncPlayerChatEvent event) {
+		// Eliminate all remaining receivers so bungeechat handles chat completely
+		event.getRecipients().clear();
+		
+		// Send out chat
 		ChatChannel channel = manager.getDefaultChannel(Global.getServer(), event.getPlayer().getWorld().getName());
-		GlobalPlayer sender = Global.getPlayer(event.getPlayer().getUniqueId());
-		
-		// Get the final message to display
-		String finalMessage;
 		if (channel instanceof FormattedChatChannel) {
-			finalMessage = ((FormattedChatChannel)channel).getFormat();
-			finalMessage = handler.getFormatter().format(event.getMessage(), finalMessage, sender);
+			handler.sendFormat(event.getMessage(), (FormattedChatChannel)channel, event.getPlayer());
 		} else {
-			finalMessage = String.format(event.getFormat(), sender.getDisplayName(), event.getMessage());
-		}
-		
-		// Send if needed
-		if (channel.getScope() == ChannelScope.GLOBAL) {
-			handler.sendRemoteOnly(finalMessage, channel);
+			handler.send(event.getMessage(), null, channel);
 		}
 	}
 	

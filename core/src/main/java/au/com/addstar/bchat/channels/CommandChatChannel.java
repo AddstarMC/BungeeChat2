@@ -8,13 +8,11 @@ import com.google.common.base.Optional;
 public class CommandChatChannel extends FormattedChatChannel {
 	private String[] commands;
 	private Optional<String> commandPermission;
-	private boolean useHighlighter;
 	
 	CommandChatChannel(String name, String[] commands, ChatChannelManager manager) {
 		super(name, manager);
 		
 		this.commands = commands;
-		useHighlighter = false;
 	}
 	
 	CommandChatChannel(String name, ChatChannelManager manager) {
@@ -33,14 +31,6 @@ public class CommandChatChannel extends FormattedChatChannel {
 		commandPermission = permission;
 	}
 	
-	public boolean getUseHighlighter() {
-		return useHighlighter;
-	}
-	
-	public void setUseHighlighter(boolean useHighlighter) {
-		this.useHighlighter = useHighlighter;
-	}
-	
 	@Override
 	public void save(Map<String, String> values) {
 		super.save(values);
@@ -50,7 +40,6 @@ public class CommandChatChannel extends FormattedChatChannel {
 		}
 		
 		values.put("command", Joiner.on(';').join(commands));
-		values.put("highlight", String.valueOf(useHighlighter));
 		values.put("type", "command");
 	}
 	
@@ -65,6 +54,5 @@ public class CommandChatChannel extends FormattedChatChannel {
 		}
 		
 		commands = values.get("command").split(";");
-		useHighlighter = Boolean.parseBoolean(values.get("highlight"));
 	}
 }

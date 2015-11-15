@@ -14,27 +14,35 @@ import net.md_5.bungee.chat.ComponentSerializer;
 public class BroadcastPacket extends BasePacket {
 	public String channelId;
 	public BaseComponent[] message;
-	public boolean isHighlightChannel;
+	public BaseComponent[] highlightedMessage;
 	
 	public BroadcastPacket() {
 	}
 	
-	public BroadcastPacket(ChatChannel channel, BaseComponent[] message, boolean isHighlightChannel) {
+	public BroadcastPacket(ChatChannel channel, BaseComponent[] message) {
 		this.channelId = channel.getName();
 		this.message = message;
-		this.isHighlightChannel = isHighlightChannel;
+	}
+	
+	public BroadcastPacket(ChatChannel channel, BaseComponent[] message, BaseComponent[] highlightedMessage) {
+		this.channelId = channel.getName();
+		this.message = message;
+		this.highlightedMessage = highlightedMessage;
 	}
 	
 	@Override
 	public void write(DataOutput out) throws IOException {
-		out.writeBoolean(isHighlightChannel);
+		out.writeBoolean(highlightedMessage != null);
 		out.writeUTF(channelId);
 		out.writeUTF(ComponentSerializer.toString(message));
+		if (highlightedMessage != null) {
+			out.writeUTF(ComponentSerializer.toString(highlightedMessage));
+		}
 	}
 
 	@Override
 	public void read(DataInput in) throws IOException {
-		isHighlightChannel = in.readBoolean();
+		boolean hasHighlightVersion = in.readBoolean();
 		channelId = in.readUTF();
 		
 		String json = in.readUTF();
@@ -42,6 +50,17 @@ public class BroadcastPacket extends BasePacket {
 			message = ComponentSerializer.parse(json);
 		} catch (Throwable e) {
 			throw new IOException(e);
+		}
+		
+		if (hasHighlightVersion) {
+			json = in.readUTF();
+			try {
+				highlightedMessage = ComponentSerializer.parse(json);
+			} catch (Throwable e) {
+				throw new IOException(e);
+			}
+		} else {
+			highlightedMessage = null;
 		}
 	}
 }

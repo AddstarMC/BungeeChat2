@@ -1,4 +1,3 @@
 highlighter:
   enabled: false
-  permission: bungeechat.keywords
   file: keywords.txt

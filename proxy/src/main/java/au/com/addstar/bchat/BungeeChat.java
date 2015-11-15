@@ -16,6 +16,8 @@ import au.com.addstar.bchat.groups.GroupManager;
 import au.com.addstar.bchat.groups.GroupManagerListener;
 import au.com.addstar.bchat.packets.BasePacket;
 import au.com.addstar.bchat.packets.PacketManager;
+import au.com.addstar.bchat.packets.ReloadPacket;
+import au.com.addstar.bchat.packets.ReloadPacket.ReloadType;
 import au.com.addstar.bchat.tab.TabListener;
 import au.com.addstar.bchat.tab.TabManager;
 import net.cubespace.geSuit.core.Global;
@@ -50,6 +52,7 @@ public class BungeeChat extends Plugin {
 
 		loadChannels(backend);
 		loadGroups(backend);
+		loadHighlighter(backend);
 		setupTabList();
 		registerCommands();
 	}
@@ -64,6 +67,7 @@ public class BungeeChat extends Plugin {
 		saveDefaultFile("channels.yml", dataFolder);
 		saveDefaultFile("groups.yml", dataFolder);
 		saveDefaultFile("config.yml", dataFolder);
+		saveDefaultFile("keywords.txt", dataFolder);
 	}
 
 	private void saveDefaultFile(String fileName, File directory) throws IOException {
@@ -131,6 +135,21 @@ public class BungeeChat extends Plugin {
 		}
 	}
 	
+	private void loadHighlighter(StorageInterface backend) {
+		// TODO: Configurable file name and enable / disable
+		File configFile = new File(getDataFolder(), "keywords.txt");
+		if (configFile.exists()) {
+			HighlighterConfigLoader loader = new HighlighterConfigLoader(backend, getLogger());
+			try {
+				loader.load(configFile);
+			} catch (IOException e) {
+				getLogger().log(Level.SEVERE, "Failed to load " + configFile.getName(), e);
+			}
+			
+			channel.broadcast(new ReloadPacket(ReloadType.Highlighter));
+		}
+	}
+	
 	private void setupTabList() {
 		tabManager = new TabManager(groupManager, 20, TimeUnit.MILLISECONDS);
 		tabManager.startSendingTask(this, getProxy().getScheduler());
@@ -142,7 +161,10 @@ public class BungeeChat extends Plugin {
 	}
 	
 	public void reload() {
+		StorageInterface backend = Global.getStorageProvider().create("bungeechat");
+		
 		loadChannelConfig();
 		loadGroupConfig();
+		loadHighlighter(backend);
 	}
 }

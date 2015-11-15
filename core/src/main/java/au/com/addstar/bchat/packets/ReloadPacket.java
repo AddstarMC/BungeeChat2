@@ -29,6 +29,7 @@ public class ReloadPacket extends BasePacket {
 	public enum ReloadType {
 		All,
 		Channels,
-		Groups
+		Groups,
+		Highlighter
 	}
 }

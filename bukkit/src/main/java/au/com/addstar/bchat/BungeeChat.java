@@ -5,7 +5,6 @@ import java.util.concurrent.Executors;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.TabCompleter;
-import org.bukkit.command.TabExecutor;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -14,6 +13,8 @@ import com.google.common.util.concurrent.MoreExecutors;
 import au.com.addstar.bchat.channels.ChannelHandler;
 import au.com.addstar.bchat.channels.ChannelManagerListener;
 import au.com.addstar.bchat.channels.ChatChannelManager;
+import au.com.addstar.bchat.channels.Highlighter;
+import au.com.addstar.bchat.channels.HighlighterListener;
 import au.com.addstar.bchat.channels.ChannelPacketListener;
 import au.com.addstar.bchat.commands.BungeeChatCommand;
 import au.com.addstar.bchat.commands.ChannelCommand;
@@ -34,6 +35,7 @@ public class BungeeChat extends JavaPlugin {
 	private PacketManager packetManager;
 	private Channel<BasePacket> channel;
 	private ListeningExecutorService executorService;
+	private Highlighter highlighter;
 	
 	private ChannelHandler handler;
 	
@@ -46,6 +48,7 @@ public class BungeeChat extends JavaPlugin {
 		setupChannel();
 		setupChannelManager(backend);
 		setupGroupManager(backend);
+		setupHighlighter(backend);
 		setupHandlers();
 		registerListeners();
 		registerCommands();
@@ -78,8 +81,18 @@ public class BungeeChat extends JavaPlugin {
 		});
 	}
 	
+	private void setupHighlighter(StorageInterface backend) {
+		highlighter = new Highlighter(backend);
+		channel.addReceiver(new HighlighterListener(highlighter, executorService));
+		
+		// Load it async
+		executorService.submit(() -> {
+			highlighter.load();
+		});
+	}
+	
 	private void setupHandlers() {
-		handler = new ChannelHandler(channelManager, channel, new ChatFormatter(groupManager));
+		handler = new ChannelHandler(channelManager, channel, new ChatFormatter(groupManager), highlighter);
 		channel.addReceiver(new ChannelPacketListener(handler));
 		channel.addReceiver(new PacketListener(this));
 	}

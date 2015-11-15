@@ -1,0 +1,5 @@
+# Each line is a regex > colour pair to highlight
+\bmod\b > 1
+\bmoderator\b > 1
+\badmin\b > c
+\bhelp\b > c

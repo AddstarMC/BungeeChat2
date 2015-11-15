@@ -46,6 +46,8 @@ permission:
     default: op
   bungeechat.command.channel.subscribe.other:
     default: op
+  bungeechat.see.highlighted:
+    default: op
 commands:
   runchat:
     usage: /<command> <channel> <message>
