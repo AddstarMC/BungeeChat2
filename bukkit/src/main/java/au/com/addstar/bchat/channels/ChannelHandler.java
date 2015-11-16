@@ -1,9 +1,11 @@
 package au.com.addstar.bchat.channels;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.permissions.Permissible;
 
 import au.com.addstar.bchat.ChatFormatter;
 import au.com.addstar.bchat.Debugger;
@@ -26,11 +28,31 @@ public class ChannelHandler {
 	private final ChatFormatter formatter;
 	private final Highlighter highlighter;
 	
+	private ThreadLocal<Boolean> enableConsoleEcho;
+	
 	public ChannelHandler(ChatChannelManager manager, Channel<BasePacket> pipe, ChatFormatter formatter, Highlighter highlighter) {
 		this.manager = manager;
 		this.pipe = pipe;
 		this.formatter = formatter;
 		this.highlighter = highlighter;
+		
+		enableConsoleEcho = ThreadLocal.withInitial(() -> true);
+	}
+	
+	/**
+	 * Enables console echo on broadcast 
+	 * for this thread
+	 */
+	public void enableConsoleEcho() {
+		enableConsoleEcho.set(true);
+	}
+	
+	/**
+	 * Disables console echo on broadcast
+	 * for this thread
+	 */
+	public void disableConsoleEcho() {
+		enableConsoleEcho.set(false);
 	}
 	
 	/**
@@ -226,15 +248,31 @@ public class ChannelHandler {
 	 * Broadcast a message to all players that are allowed to hear it
 	 */
 	private void broadcastLocal(BaseComponent[] message, BaseComponent[] highlighted, ChatChannel channel, World sourceWorld) {
-		for (Player player : Bukkit.getOnlinePlayers()) {
-			if (!canSee(player, channel, sourceWorld)) {
-				continue;
-			}
-			
-			if (highlighted != null && player.hasPermission("bungeechat.see.highlighted")) {
-				player.spigot().sendMessage(highlighted);
-			} else {
-				player.spigot().sendMessage(message);
+		for (Permissible permissible : Bukkit.getPluginManager().getPermissionSubscriptions(Server.BROADCAST_CHANNEL_USERS)) {
+			if (permissible instanceof CommandSender) {
+				CommandSender sender = (CommandSender)permissible;
+				
+				// Disable console echo
+				if (sender == Bukkit.getConsoleSender() && !enableConsoleEcho.get()) {
+					continue;
+				}
+				
+				if (!canSee(sender, channel, sourceWorld)) {
+					continue;
+				}
+				
+				BaseComponent[] toSend;
+				if (highlighted != null && sender.hasPermission("bungeechat.see.highlighted")) {
+					toSend = highlighted;
+				} else {
+					toSend = message;
+				}
+				
+				if (sender instanceof Player) {
+					((Player)sender).spigot().sendMessage(toSend);
+				} else {
+					sender.sendMessage(TextComponent.toLegacyText(toSend));
+				}
 			}
 		}
 	}
@@ -243,21 +281,34 @@ public class ChannelHandler {
 	 * Broadcast a message to all players that are allowed to hear it while formatting
 	 */
 	private void broadcastLocalFormat(String message, GlobalPlayer sender, PostFormattedChatChannel channel, World sourceWorld) {
-		for (Player player : Bukkit.getOnlinePlayers()) {
-			if (!canSee(player, channel, sourceWorld)) {
-				continue;
+		for (Permissible permissible : Bukkit.getPluginManager().getPermissionSubscriptions(Server.BROADCAST_CHANNEL_USERS)) {
+			if (permissible instanceof CommandSender) {
+				CommandSender cs = (CommandSender)permissible;
+				
+				// Disable console echo
+				if (cs == Bukkit.getConsoleSender() && !enableConsoleEcho.get()) {
+					continue;
+				}
+				
+				if (!canSee(cs, channel, sourceWorld)) {
+					continue;
+				}
+				
+				// Format this message specifically for this player
+				GlobalPlayer listener = null;
+				if (cs instanceof Player) {
+					listener = Global.getPlayer(((Player)cs).getUniqueId());
+				}
+				
+				String format = channel.getFormat(sender, listener);
+				if (channel instanceof DMChatChannel) {
+					format = formatter.formatDM(message, format, sender, ((DMChatChannel)channel).getTarget(sender));
+				} else {
+					format = formatter.format(message, format, sender);
+				}
+				
+				cs.sendMessage(format);
 			}
-			
-			// Format this message specifically for this player
-			GlobalPlayer listener = Global.getPlayer(player.getUniqueId());
-			String format = channel.getFormat(sender, listener);
-			if (channel instanceof DMChatChannel) {
-				format = formatter.formatDM(message, format, sender, ((DMChatChannel)channel).getTarget(sender));
-			} else {
-				format = formatter.format(message, format, sender);
-			}
-			
-			player.sendMessage(format);
 		}
 	}
 	

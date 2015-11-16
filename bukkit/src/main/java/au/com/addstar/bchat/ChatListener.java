@@ -83,6 +83,8 @@ public class ChatListener implements Listener {
 		event.getRecipients().clear();
 		
 		// Send out chat
+		handler.disableConsoleEcho();
+		
 		GlobalPlayer sender = Global.getPlayer(event.getPlayer().getUniqueId());
 		ChatChannel channel = getOutputChannel(sender, event.getPlayer().getWorld().getName());
 		if (channel instanceof FormattedChatChannel) {
@@ -90,6 +92,8 @@ public class ChatListener implements Listener {
 		} else {
 			handler.send(event.getMessage(), null, channel);
 		}
+		
+		handler.enableConsoleEcho();
 	}
 	
 	@EventHandler(priority=EventPriority.LOW, ignoreCancelled=true)
