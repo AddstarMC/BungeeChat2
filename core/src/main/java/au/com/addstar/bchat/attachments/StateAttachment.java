@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+import au.com.addstar.bchat.channels.ChatChannel;
 import au.com.addstar.bchat.groups.Group;
 import net.cubespace.geSuit.core.attachments.Attachment;
 
@@ -13,6 +14,8 @@ public class StateAttachment extends Attachment {
 	private String serverName;
 	
 	private UUID replyTarget;
+	
+	private String outputChannelOverride;
 	
 	public void setGroup(Group group) {
 		if (group != null && group.getName().equals(groupName)) {
@@ -60,6 +63,18 @@ public class StateAttachment extends Attachment {
 		return replyTarget;
 	}
 	
+	public void setOutputChannel(ChatChannel channel) {
+		outputChannelOverride = channel.getName();
+	}
+	
+	public void resetOutputChannel() {
+		outputChannelOverride = null;
+	}
+	
+	public String getOutputChannel() {
+		return outputChannelOverride;
+	}
+	
 	@Override
 	public void save(Map<String, String> values) {
 		if (groupName != null) {
@@ -77,6 +92,10 @@ public class StateAttachment extends Attachment {
 		if (replyTarget != null) {
 			values.put("reply", replyTarget.toString());
 		}
+		
+		if (outputChannelOverride != null) {
+			values.put("output", outputChannelOverride);
+		}
 	}
 
 	@Override
@@ -88,6 +107,12 @@ public class StateAttachment extends Attachment {
 			replyTarget = UUID.fromString(values.get("reply"));
 		} else {
 			replyTarget = null;
+		}
+		
+		if (values.containsKey("output")) {
+			outputChannelOverride = values.get("output");
+		} else {
+			outputChannelOverride = null;
 		}
 	}
 

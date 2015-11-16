@@ -9,6 +9,7 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.server.ServerCommandEvent;
 
+import au.com.addstar.bchat.attachments.StateAttachment;
 import au.com.addstar.bchat.channels.ChannelHandler;
 import au.com.addstar.bchat.channels.ChannelScope;
 import au.com.addstar.bchat.channels.ChatChannel;
@@ -27,10 +28,24 @@ public class ChatListener implements Listener {
 		this.handler = handler;
 	}
 	
+	private ChatChannel getOutputChannel(GlobalPlayer player, String world) {
+		StateAttachment state = player.getAttachment(StateAttachment.class);
+		ChatChannel channel = null;
+		if (state != null && state.getOutputChannel() != null) {
+			channel = manager.getChannel(state.getOutputChannel());
+		}
+		
+		if (channel == null) {
+			channel = manager.getDefaultChannel(Global.getServer(), world);
+		}
+		
+		return channel;
+	}
+	
 	@EventHandler(priority=EventPriority.LOWEST, ignoreCancelled=true)
 	public void onChatPre(AsyncPlayerChatEvent event) {
-		ChatChannel channel = manager.getDefaultChannel(Global.getServer(), event.getPlayer().getWorld().getName());
 		GlobalPlayer sender = Global.getPlayer(event.getPlayer().getUniqueId());
+		ChatChannel channel = getOutputChannel(sender, event.getPlayer().getWorld().getName());
 		
 		event.setMessage(ChatColorizer.colorizeWithPermission(event.getMessage(), event.getPlayer()).trim());
 		
@@ -68,7 +83,8 @@ public class ChatListener implements Listener {
 		event.getRecipients().clear();
 		
 		// Send out chat
-		ChatChannel channel = manager.getDefaultChannel(Global.getServer(), event.getPlayer().getWorld().getName());
+		GlobalPlayer sender = Global.getPlayer(event.getPlayer().getUniqueId());
+		ChatChannel channel = getOutputChannel(sender, event.getPlayer().getWorld().getName());
 		if (channel instanceof FormattedChatChannel) {
 			handler.sendFormat(event.getMessage(), (FormattedChatChannel)channel, event.getPlayer());
 		} else {
