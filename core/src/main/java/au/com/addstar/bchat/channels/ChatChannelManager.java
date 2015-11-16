@@ -1,5 +1,6 @@
 package au.com.addstar.bchat.channels;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -385,6 +387,14 @@ public class ChatChannelManager {
 		return commandMap.get(command.toLowerCase());
 	}
 	
+	public Collection<ChatChannel> getChannels() {
+		return Collections.unmodifiableCollection(channelMap.values());
+	}
+	
+	public Iterable<ChatChannel> getChannels(ChatChannelTemplate template) {
+		return Iterables.filter(getChannels(), c -> c.getName().startsWith(template.getName() + ":"));
+	}
+	
 	public void addTemplate(ChatChannelTemplate template) {
 		synchronized (templateMap) {
 			if (templateMap.containsKey(template.getName())) {
@@ -401,6 +411,10 @@ public class ChatChannelManager {
 	
 	public ChatChannelTemplate getTemplate(String name) {
 		return templateMap.get(name);
+	}
+	
+	public Collection<ChatChannelTemplate> getTemplates() {
+		return Collections.unmodifiableCollection(templateMap.values());
 	}
 	
 	/**
