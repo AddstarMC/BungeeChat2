@@ -75,7 +75,7 @@ public class ChatChannelManager {
 					debug.fine("Removing absent local channel " + key);
 					
 					// Remove command bindings
-					ChatChannel channel = channelMap.remove(key);
+					ChatChannel channel = channelMap.get(key);
 					if (channel instanceof CommandChatChannel) {
 						CommandChatChannel cChannel = (CommandChatChannel)channel;
 						for (String command : cChannel.getCommands()) {

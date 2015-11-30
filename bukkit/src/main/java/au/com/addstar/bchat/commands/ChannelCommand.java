@@ -16,6 +16,7 @@ public class ChannelCommand extends CommandDispatcher implements TabExecutor {
 		registerCommand(new SubscribeCommand(manager));
 		registerCommand(new UnsubscribeCommand(manager));
 		registerCommand(new OutputCommand(manager));		
+		registerCommand(new AddCommand(manager));
 	}
 	
 	@Override

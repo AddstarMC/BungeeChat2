@@ -91,13 +91,13 @@ public class ChatFormatter {
 	
 	public String formatIn(String message, String format, TemporaryChatChannel channel, GlobalPlayer sender) {
 		String partial = format(message, format, sender);
-		partial.replace("{CHANNEL}", channel.getSubName());
+		partial = partial.replace("{CHANNEL}", channel.getSubName());
 		return partial;
 	}
 	
 	public String formatConsoleIn(String message, String format, TemporaryChatChannel channel, String consoleName) {
 		String partial = formatConsole(message, format, consoleName);
-		partial.replace("{CHANNEL}", channel.getSubName());
+		partial = partial.replace("{CHANNEL}", channel.getSubName());
 		return partial;
 	}
 	

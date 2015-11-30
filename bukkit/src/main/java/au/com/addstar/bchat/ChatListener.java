@@ -16,6 +16,7 @@ import au.com.addstar.bchat.channels.ChatChannel;
 import au.com.addstar.bchat.channels.ChatChannelManager;
 import au.com.addstar.bchat.channels.CommandChatChannel;
 import au.com.addstar.bchat.channels.FormattedChatChannel;
+import au.com.addstar.bchat.channels.TemporaryChatChannel;
 import net.cubespace.geSuit.core.Global;
 import net.cubespace.geSuit.core.GlobalPlayer;
 
@@ -53,7 +54,11 @@ public class ChatListener implements Listener {
 		if (channel instanceof FormattedChatChannel) {
 			String format;
 			format = ((FormattedChatChannel)channel).getFormat();
-			format = handler.getFormatter().format(event.getMessage(), format, sender);
+			if (channel instanceof TemporaryChatChannel) {
+				format = handler.getFormatter().formatIn(event.getMessage(), format, (TemporaryChatChannel)channel, sender);
+			} else {
+				format = handler.getFormatter().format(event.getMessage(), format, sender);
+			}
 			event.setFormat(format);
 		}
 		
