@@ -1,5 +1,7 @@
 package au.com.addstar.bchat.channels;
 
+import java.util.List;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.World;
@@ -7,8 +9,12 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permissible;
 
+import com.google.common.collect.Lists;
+
 import au.com.addstar.bchat.ChatFormatter;
 import au.com.addstar.bchat.Debugger;
+import au.com.addstar.bchat.events.ChannelChatEvent;
+import au.com.addstar.bchat.events.ChannelReceiveEvent;
 import au.com.addstar.bchat.packets.BasePacket;
 import au.com.addstar.bchat.packets.BroadcastPacket;
 import au.com.addstar.bchat.packets.PostFormatBroadcastPacket;
@@ -147,6 +153,15 @@ public class ChannelHandler {
 	public void sendFormat(String message, FormattedChatChannel channel, CommandSender sender) {
 		String format = channel.getFormat();
 		
+		ChannelChatEvent event = new ChannelChatEvent(sender, channel, message);
+		Bukkit.getPluginManager().callEvent(event);
+		
+		if (event.isCancelled()) {
+			return;
+		}
+		
+		message = event.getMessage();
+		
 		// TODO: source world handling
 		// Handle post formatting channels differently
 		if (channel instanceof PostFormattedChatChannel) {
@@ -248,6 +263,7 @@ public class ChannelHandler {
 	 * Broadcast a message to all players that are allowed to hear it
 	 */
 	private void broadcastLocal(BaseComponent[] message, BaseComponent[] highlighted, ChatChannel channel, World sourceWorld) {
+		List<CommandSender> receivers = Lists.newArrayList();
 		for (Permissible permissible : Bukkit.getPluginManager().getPermissionSubscriptions(Server.BROADCAST_CHANNEL_USERS)) {
 			if (permissible instanceof CommandSender) {
 				CommandSender sender = (CommandSender)permissible;
@@ -261,18 +277,28 @@ public class ChannelHandler {
 					continue;
 				}
 				
-				BaseComponent[] toSend;
-				if (highlighted != null && sender.hasPermission("bungeechat.see.highlighted")) {
-					toSend = highlighted;
-				} else {
-					toSend = message;
-				}
-				
-				if (sender instanceof Player) {
-					((Player)sender).spigot().sendMessage(toSend);
-				} else {
-					sender.sendMessage(TextComponent.toLegacyText(toSend));
-				}
+				receivers.add(sender);
+			}
+		}
+		
+		ChannelReceiveEvent event = new ChannelReceiveEvent(channel, message, highlighted, receivers);
+		Bukkit.getPluginManager().callEvent(event);
+		
+		receivers = event.getReceivers();
+		
+		// Now send it out
+		for (CommandSender sender : receivers) {
+			BaseComponent[] toSend;
+			if (highlighted != null && sender.hasPermission("bungeechat.see.highlighted")) {
+				toSend = highlighted;
+			} else {
+				toSend = message;
+			}
+			
+			if (sender instanceof Player) {
+				((Player)sender).spigot().sendMessage(toSend);
+			} else {
+				sender.sendMessage(TextComponent.toLegacyText(toSend));
 			}
 		}
 	}
