@@ -9,7 +9,9 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -61,9 +63,27 @@ public class ChatChannelManager {
 		defaultChannelMap.clear();
 	}
 	
+	private List<String> getBackendChannelList() {
+		Logger debug = Debugger.getLogger(Debugger.Backend);
+		List<String> normalChannels = backend.getListString("channels.#global");
+		debug.fine("Found #global channels: " + normalChannels);
+		
+		List<String> allChannels = Lists.newArrayList(normalChannels);
+		
+		for (ChatChannelTemplate template : templateMap.values()) {
+			List<String> tempChannels = backend.getListString("channels." + template.getName());
+			debug.fine("Found " + template.getName() + " channels: " + tempChannels);
+			for (String name : tempChannels) {
+				allChannels.add(template.getName() + ":" + name);
+			}
+		}
+		
+		return allChannels;
+	}
+	
 	private void loadChannels() {
 		synchronized(channelMap) {
-			List<String> channelList = backend.getListString("channels");
+			List<String> channelList = getBackendChannelList();
 			Logger debug = Debugger.getLogger(Debugger.Backend);
 			debug.info("Loading channels from backend");
 			
@@ -103,7 +123,7 @@ public class ChatChannelManager {
 				case "command":
 					channel = new CommandChatChannel(channelName, this);
 					break;
-				case "temporary":
+				case "temp":
 					channel = new TemporaryChatChannel(channelName, this);
 					break;
 				default:
@@ -131,12 +151,28 @@ public class ChatChannelManager {
 			debug.info("Saving channels to backend");
 			
 			List<String> channels = Lists.newArrayList(channelMap.keySet());
-			backend.set("channels", channels);
+			backend.set("channels.#global", channels);
+			
+			ListMultimap<ChatChannelTemplate, String> templateChannels = ArrayListMultimap.create();
 			
 			StorageSection channelSection = backend.getSubsection("channel");
 			for (ChatChannel channel : channelMap.values()) {
 				channelSection.set(channel.getName(), channel);
+				if (channel instanceof TemporaryChatChannel) {
+					TemporaryChatChannel tChannel = (TemporaryChatChannel)channel;
+					templateChannels.put(tChannel.getTemplate(), tChannel.getSubName());
+				}
+				
 				debug.fine("Pushing channel " + channel.getName());
+			}
+			
+			// Save the temp channel lists
+			for (ChatChannelTemplate template : templateMap.values()) {
+				if (templateChannels.containsKey(template)) {
+					backend.set("channels." + template.getName(), templateChannels.get(template));
+				} else {
+					backend.remove("channels." + template.getName());
+				}
 			}
 		}
 	}

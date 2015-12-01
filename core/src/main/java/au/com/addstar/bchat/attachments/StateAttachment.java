@@ -64,11 +64,17 @@ public class StateAttachment extends Attachment {
 	}
 	
 	public void setOutputChannel(ChatChannel channel) {
-		outputChannelOverride = channel.getName();
+		if (!Objects.equals(outputChannelOverride, channel.getName())) {
+			outputChannelOverride = channel.getName();
+			setDirty();
+		}
 	}
 	
 	public void resetOutputChannel() {
-		outputChannelOverride = null;
+		if (outputChannelOverride != null) {
+			outputChannelOverride = null;
+			setDirty();
+		}
 	}
 	
 	public String getOutputChannel() {
